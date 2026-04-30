@@ -2,6 +2,18 @@
 
 All notable changes to scriptorium-cowork are documented here.
 
+## 0.1.4 — 2026-04-30
+
+Re-ship of v0.1.3 with an install-blocking fix. v0.1.3 shipped a `plugin.json` whose `description` field was 517 characters, which Cowork's marketplace validator rejects (cap is ~256). The artifact attached to the v0.1.3 GitHub release is non-installable; use v0.1.4 instead.
+
+### Fixed (install-blocking)
+- `plugin.json` description trimmed from 517 → 229 characters so the manifest passes Cowork validation.
+- `scripts/release.sh` now validates the built `.plugin`'s `plugin.json` description length at build time (refuses to release if > 256). Same check added to `.github/workflows/release.yml`.
+- Release tooling now defensively excludes `marketplace.json`, `scripts/`, and `.github/` from the `.plugin` distribution. (These belong in the repo, not in the artifact dragged into Cowork chat.)
+
+### Content
+- All v0.1.3 features ship unchanged (evidence tiers, metadata resolution, two-stage contradictions, doctoral-workflow README, grill-me skills). See the v0.1.3 section below for the full list.
+
 ## 0.1.3 — 2026-04-30
 
 Three audit fixes that strengthen synthesis defensibility — evidence tiers in the schema, metadata-resolution-aware cite-check, and a same-question filter on contradictions.
@@ -30,6 +42,10 @@ Three audit fixes that strengthen synthesis defensibility — evidence tiers in 
 - **README lead and hero rewritten** to position Scriptorium as a research-direction-and-literature-review tool for graduate students and doctoral researchers — *"from a half-formed research idea to a defensible direction, with the literature to back it up"* — rather than as "lit review with podcast." The canonical doctoral workflow (idea → grill → research question → lit review → defensible synthesis) is the lead use case. The NotebookLM podcast / Studio artifacts are now framed as a downstream "neat function" — a real value-add and worth highlighting, but the convenience output of the workflow, not the workflow itself.
 - **"Three patterns that work"** expanded to four and reordered: doctoral workflow first, get-unstuck-on-vague-interest second, hand-draft-and-tape-to-committee third, get-smart-fast-for-meeting fourth.
 - **`plugin.json` and `marketplace.json` descriptions** updated to lead with the grad-student / doctoral-researcher audience and the idea-to-question-to-review pipeline. The directory submission text now matches what the tool actually does best.
+
+### Fixed (install-blocking)
+- **`plugin.json` description length cap.** Cowork's validator silently rejects `.plugin` files when `plugin.json`'s `description` field exceeds ~256 characters. The v0.1.3 description (517 chars) tripped this and caused install to fail with an opaque "Plugin validation failed" message. Trimmed to 245 chars; the longer marketing prose lives in the README and the GitHub repo About field where there is no such cap. Both `scripts/release.sh` and `.github/workflows/release.yml` now check description length at build time and refuse to build a non-installable artifact.
+- **`marketplace.json` excluded from the `.plugin` distribution.** The marketplace manifest belongs in the GitHub repo for the `/plugin marketplace add` install path; including it inside the `.plugin` file is redundant. The release tooling now excludes it by default.
 
 ### Migration
 None required — `evidence_tier` and `metadata_resolution` are optional on existing rows. Reviews built with v0.1.2 continue to work; rows lacking the new fields render with the previous register (un-modulated). New reviews built with v0.1.3 get the full benefits. Re-extracting an existing review with v0.1.3 to populate the new fields is supported but not necessary.

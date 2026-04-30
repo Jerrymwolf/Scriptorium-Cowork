@@ -92,10 +92,34 @@ git push
 echo
 echo "=== Build .plugin ==="
 rm -f "$PLUGIN_FILE"
-zip -r "$PLUGIN_FILE" . -x "*.git*" "*.DS_Store" "*.plugin" "scripts/release.sh" >/dev/null
+# Exclusion rationale:
+#   *.git*                 — git metadata and .gitignore (not user-facing)
+#   *.DS_Store             — macOS folder metadata
+#   *.plugin               — prior build artifacts
+#   scripts/*              — developer-only release tooling
+#   .github/*              — CI workflows
+#   .claude-plugin/marketplace.json — marketplace manifest belongs in the GitHub repo
+#                            for the /plugin marketplace add path; including it inside
+#                            the .plugin file is redundant and historically caused
+#                            validator confusion (Cowork treats a package as either
+#                            plugin or marketplace, not both)
+zip -r "$PLUGIN_FILE" . \
+  -x "*.git*" "*.DS_Store" "*.plugin" \
+     "scripts/release.sh" "scripts/*" \
+     ".github/*" \
+     ".claude-plugin/marketplace.json" \
+  >/dev/null
 SKILL_COUNT="$(unzip -l "$PLUGIN_FILE" | grep -c 'SKILL\.md$' || true)"
 SIZE_KB="$(($(stat -f%z "$PLUGIN_FILE" 2>/dev/null || stat -c%s "$PLUGIN_FILE") / 1024))"
 echo "  built: $PLUGIN_FILE ($SIZE_KB KB, $SKILL_COUNT SKILL.md files)"
+
+# Defensive plugin.json description-length check — Cowork's validator caps at ~256 chars
+DESC_LEN=$(python3 -c "import json; print(len(json.load(open('.claude-plugin/plugin.json'))['description']))")
+if [ "$DESC_LEN" -gt 256 ]; then
+  echo "  ERROR: plugin.json description is $DESC_LEN chars (Cowork's validator caps at ~256). Shorten it." >&2
+  exit 1
+fi
+echo "  description length: $DESC_LEN chars (OK, under 256)"
 
 echo
 echo "=== Extract CHANGELOG section for release notes ==="

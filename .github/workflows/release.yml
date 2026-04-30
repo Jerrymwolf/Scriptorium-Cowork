@@ -41,10 +41,23 @@ jobs:
           fi
           echo "Tag, plugin.json, and CHANGELOG all agree: $TAG"
 
+      - name: Validate plugin.json description length
+        run: |
+          DESC_LEN=$(python3 -c "import json; print(len(json.load(open('.claude-plugin/plugin.json'))['description']))")
+          if [ "$DESC_LEN" -gt 256 ]; then
+            echo "::error::plugin.json description is $DESC_LEN chars; Cowork's validator caps at ~256. Shorten it."
+            exit 1
+          fi
+          echo "plugin.json description: $DESC_LEN chars (OK)"
+
       - name: Build .plugin artifact
         run: |
+          # Excluded files documented in scripts/release.sh
           zip -r /tmp/scriptorium-cowork.plugin . \
-            -x "*.git*" "*.DS_Store" "*.plugin" "scripts/release.sh" ".github/*"
+            -x "*.git*" "*.DS_Store" "*.plugin" \
+               "scripts/*" \
+               ".github/*" \
+               ".claude-plugin/marketplace.json"
           ls -la /tmp/scriptorium-cowork.plugin
           echo "SKILL.md count: $(unzip -l /tmp/scriptorium-cowork.plugin | grep -c 'SKILL\.md$')"
 
