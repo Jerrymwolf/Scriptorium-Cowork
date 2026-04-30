@@ -11,6 +11,7 @@ Scriptorium turns the middle third of a literature review — search through syn
 - **A defensible synthesis.** Every sentence carries a `[paper_id:locator]` token that resolves to a row in your evidence store. Unsupported sentences are stripped or flagged before commit.
 - **A committee-ready audit trail.** Every query, screening decision, extraction, and synthesis verify is timestamped and stored in append-only `audit.jsonl`. Your methods chapter has a receipt.
 - **Named contradictions.** When two papers disagree on the same concept, Scriptorium names the camps. Disagreement survives into your draft instead of getting smoothed into false consensus.
+- **Publishing-ready artifacts.** Push the finished review into NotebookLM and turn it into a podcast, video, slide deck, mind map, briefing doc, study guide, FAQ, timeline, or quiz — or chat the literature directly. See [Publish to NotebookLM](#publish-to-notebooklm).
 
 ## Why Scriptorium
 
@@ -70,7 +71,32 @@ Scriptorium fires `using-scriptorium` first to probe your connectors, then `lit-
 - `contradictions` — named-camp disagreements
 - `audit-jsonl` — every action, timestamped, status-tagged
 
-These artifacts live in whichever state home you picked at the start. Export them whenever you want — they're plain text or markdown.
+These artifacts live in whichever state home you picked at the start. Export them whenever you want, or feed them into NotebookLM for the full publishing menu below.
+
+## Publish to NotebookLM
+
+When the review passes its cite-check, `lit-publishing` uploads the entire corpus — `synthesis`, `contradictions`, `evidence`, plus every PDF you ingested — into a fresh NotebookLM notebook and triggers Studio artifact generation. Say *"publish this as a podcast"*, *"make a deck for committee"*, or *"send this to NotebookLM"* and it fires.
+
+**What you can generate from a finished review:**
+
+| Artifact | What it's good for |
+|---|---|
+| **Audio Overview (podcast)** | Host-style conversation walking through the literature. Listen on the commute the morning of your meeting. |
+| **Video Overview** | Narrated visual walkthrough with on-screen highlights. |
+| **Slide deck** | Committee-presentable summary, ready to drop into Keynote or Google Slides. |
+| **Mind map / infographic** | Visual concept layout showing how the papers cluster around themes. |
+| **Briefing Doc** | Executive summary of the review, generated in NotebookLM Studio. |
+| **Study Guide** | Q&A learning aid — useful for getting fluent with a literature you didn't grow up in. |
+| **FAQ** | The questions a reviewer would ask, answered from the corpus. |
+| **Timeline** | Chronological view of how the literature evolved. |
+| **Quiz** | Practice questions with answers — prelim / qualifier prep. |
+| **Chat with the corpus** | Once the notebook exists, ask any question; every answer cites the source PDFs. |
+
+The first four are triggered automatically through the NotebookLM MCP. The rest are reachable inside the NotebookLM web UI from the same notebook — no re-upload needed.
+
+**Privacy gate.** Publishing is the one operation in Scriptorium that intentionally moves your corpus off your connected stores. Before any file leaves, you see an explicit privacy prompt and confirm. The full source manifest — every file uploaded, the notebook ID, every artifact ID — gets logged to your audit trail.
+
+If `~~notebook publish` isn't connected, `lit-publishing` walks you through the manual upload path. Same notebook, five extra clicks.
 
 ## The three disciplines
 
@@ -95,7 +121,7 @@ A discipline preamble is loaded into every session via `skills/using-scriptorium
 | "draft the synthesis" | `lit-synthesizing` |
 | "where do papers disagree?" | `lit-contradiction-check` |
 | "show the audit trail" / "PRISMA flow" | `lit-audit-trail` |
-| "make a podcast / deck / mind map" | `lit-publishing` |
+| "publish this to NotebookLM" / "make a podcast" / "make a deck" / "make a video" / "make a quiz" | `lit-publishing` |
 
 ## Privacy
 
@@ -103,7 +129,7 @@ By default, your corpus stays inside the connectors you chose. The one operation
 
 ## License
 
-MIT. See [LICENSE](https://github.com/Jerrymwolf/Scriptorium/blob/main/LICENSE).
+MIT. See [LICENSE](./LICENSE).
 
 ## Credits
 
