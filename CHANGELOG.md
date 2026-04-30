@@ -14,7 +14,9 @@ Re-ship of v0.1.3 with an install-blocking fix. v0.1.3 shipped a `plugin.json` w
 ### Content
 - All v0.1.3 features ship unchanged (evidence tiers, metadata resolution, two-stage contradictions, doctoral-workflow README, grill-me skills). See the v0.1.3 section below for the full list.
 
-## 0.1.3 — 2026-04-30
+## 0.1.3 — 2026-04-30 — ⚠️ SUPERSEDED BY v0.1.4
+
+> The v0.1.3 GitHub Release was deleted because its `.plugin` artifact is non-installable (517-char `description` exceeds Cowork's ~256 cap). The git tag is preserved for history. Use **v0.1.4**, which ships identical features with the manifest fix.
 
 Three audit fixes that strengthen synthesis defensibility — evidence tiers in the schema, metadata-resolution-aware cite-check, and a same-question filter on contradictions.
 
