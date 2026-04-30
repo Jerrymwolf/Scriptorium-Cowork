@@ -11,7 +11,19 @@ This skill runs the end-to-end review pipeline. It is the single entry point for
 
 ## Phase sequence (authoritative)
 
-1. **Scope** — fire `lit-scoping`. Produces a user-approved scope artifact. Every downstream phase reads it. If the user has not already scoped, this is where the scoping conversation happens.
+0. **Direction check** — after the connector probe and before scoping, ask one question:
+
+   > "Quick check before we dive in: do you already have a clear research question, or would you like to grill out your direction first?"
+
+   Three responses route differently:
+
+   - *"Clear question, just need the literature"* → continue to Step 1 (`lit-scoping`).
+   - *"Clear topic but need the question"* → fire `research-questions-grill-me`. When it returns with `{research_question, sub_questions, tradition, boundaries}`, continue to Step 1 with that state pre-populated.
+   - *"I'm not even sure what I want yet"* / *"grill me first"* → fire `research-grill-me`. It may route to `research-questions-grill-me` along the way; eventually returns with handoff state. Then continue to Step 1.
+
+   Skip Step 0 entirely when (a) the user's initial prompt already contains a research question (a sentence ending with `?` that passes a basic So-What check), or (b) the user explicitly says they have it scoped.
+
+1. **Scope** — fire `lit-scoping`. Produces a user-approved scope artifact. Every downstream phase reads it. If grill-me handoff state is present, scoping uses it as pre-resolved fields and only asks about gaps.
 2. **Search** — fire `lit-searching`. Runs queries across the connected scholarly-search MCPs. Writes to `corpus`. Appends an audit entry.
 3. **Screen** — fire `lit-screening`. Applies inclusion/exclusion criteria. Updates `corpus` row statuses. Appends an audit entry.
 4. **Extract** — fire `lit-extracting`. For each kept paper, resolves full text via the cascade and writes evidence rows. Appends an audit entry per paper.

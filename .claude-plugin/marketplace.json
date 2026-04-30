@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Scriptorium for Claude Cowork — evidence-first, PRISMA-audited literature review. Connector-agnostic; works with whatever scholarly-search and document MCPs you have connected.",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "homepage": "https://github.com/Jerrymwolf/Scriptorium-Cowork"
   },
   "plugins": [
     {
       "name": "scriptorium-cowork",
-      "description": "Scriptorium for Claude Cowork. No CLI, no hooks, no shell — pure skills + MCP. Every claim locator-cited, every search/screen decision logged, contradictions named instead of averaged.",
-      "version": "0.1.1",
+      "description": "Cowork-only edition of Scriptorium. No CLI, no hooks, no shell — pure skills + MCP. Every claim locator-cited, every search/screen decision logged, contradictions named instead of averaged.",
+      "version": "0.1.2",
       "author": {
         "name": "Jeremiah Wolf",
         "email": "jeremiahmwolf@gmail.com"

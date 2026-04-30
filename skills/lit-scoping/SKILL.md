@@ -15,6 +15,15 @@ The goal of this skill is a single artifact: a **user-approved scope object** th
 2. **Recap + approval gate** — never proceed to search without an explicit user approval of a structured recap.
 3. **Audit trail** — on approval, append one `scope_approved` entry to the audit log via the state adapter.
 
+## Step 0 — Grill-me handoff state check
+
+If `running-lit-review` fired one of the grill-me skills before invoking this one, handoff state is in conversation context:
+
+- From `research-grill-me`: `{purpose, audience, artifact, depth, tradition?, topic}`
+- From `research-questions-grill-me`: `{research_question, sub_questions, tradition, boundaries}`
+
+Treat any present field as **resolved** in the inference pass (Step 2). Skip Tier 1+2 questions that already have answers. Go directly to Step 5 (recap and approval) with a one-line acknowledgment: *"You've already worked through purpose and question with the grill-me skill — let me confirm the scope and we'll search."*
+
 ## Step 1 — Existing-scope check
 
 If a `scope` artifact already exists at the state home (note titled `scope`, file `scope.json`, or page `Scope`), present:

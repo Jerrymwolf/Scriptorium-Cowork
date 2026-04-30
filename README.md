@@ -10,6 +10,34 @@ No CLI. No local shell. No hooks. Pure skills + the MCPs you've already connecte
 
 ---
 
+## Where to start
+
+**Most users should start by getting grilled.** Three openings, in order of how confident you are about what you want:
+
+1. **`"Grill me on this topic"`** — *Recommended starting point.* Fires `research-grill-me`, a Pocock-style three-to-five-turn interview that surfaces purpose, audience, artifact, and depth, then routes you to the right tool. You might end up at a podcast, a paper, a strategy memo, a teaching module, or just clearer thinking. If you're not sure what you want from a topic, this is the door.
+2. **`"I have a topic but no question yet — grill me"`** — Use when you know you're writing a research-paper-shaped artifact (paper, chapter, dissertation, EdD/DBA capstone) but the research question isn't pinned down. Fires `research-questions-grill-me`. Detects practitioner-doctorate context (EdD/DBA/Penn CLO) and surfaces the practitioner-researcher position rather than treating it as bias.
+3. **`"Run a lit review on X"`** — Use when you already have a clear research question and just need the literature. Fires the full pipeline; twelve minutes later you have a defensible synthesis with audit trail. Asks one question first (*"do you have a clear research question, or want to grill out your direction first?"*) so it can route you upward to the grill-me skills if it turns out you're not as ready as you thought.
+
+If you're not sure which to pick, just say *"grill me on this topic."* The skills auto-redirect — if you start in `research-grill-me` but actually need `research-questions-grill-me`, it forwards you in turn one. Same the other direction.
+
+A short transcript with `research-grill-me`:
+
+> **You:** I want to read up on caffeine and working memory.
+>
+> **Scriptorium:** Most people who start there are aiming at one of three things: getting up to speed for a meeting (commute podcast or briefing doc), writing something committee-readable (paper or chapter), or just personal curiosity. Which fits?
+>
+> **You:** Honestly the first one — I have a meeting Thursday.
+>
+> **Scriptorium:** Got it. So we're aiming at "fluent enough to hold a 30-minute conversation," not "expert enough to publish." That points at an audio overview by Thursday morning. Any specific population you care about — healthy adults, ADHD, kids, athletes?
+>
+> **You:** Healthy adults.
+>
+> **Scriptorium:** That's enough to start. Routing you to a focused lit review with a NotebookLM podcast as the deliverable. Want me to run it?
+
+Three turns, one decision per turn, ends with a concrete next action. Same shape for `research-questions-grill-me`, but the questions narrow toward phenomenon-of-interest, tradition, and operationalization rather than artifact and audience.
+
+---
+
 ## What it produces
 
 After roughly twelve minutes on a well-scoped question, Scriptorium hands you four artifacts:
@@ -167,7 +195,10 @@ Cowork dispatches via natural language. Common ones:
 | If you say… | This fires |
 |---|---|
 | *"set up Scriptorium"* | first-run setup |
-| *"run a lit review on X"* | full pipeline |
+| *"grill me on this topic"* / *"I have a topic but don't know what I want from it"* | `research-grill-me` — direction interview (recommended starting point) |
+| *"grill me on the question"* / *"I need a research question for this paper"* | `research-questions-grill-me` — RQ interview |
+| *"run a lit review on X"* | full pipeline (asks if you want to be grilled first) |
+| *"scope this review"* / *"help me plan a review on X"* | scoping only |
 | *"find papers on X"* | search only |
 | *"screen these papers"* | screening |
 | *"draft the synthesis"* | synthesis (with cite-check) |

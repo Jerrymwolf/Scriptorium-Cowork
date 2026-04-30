@@ -9,24 +9,33 @@ Input: kept papers in the `corpus` artifact. Output: full-text or abstract fallb
 
 ## Cascade
 
-Cowork has no Unpaywall, arXiv, or local PDF tooling. The cascade is:
+Earlier sources always win. Abstract-only is a valid terminal state — never an error, but flagged as lower-confidence so downstream cite-checks can treat its claims accordingly.
 
-**user_pdf → pmc (via `~~biomed search`) → abstract_only**
+**user_pdf → unpaywall → arxiv → pmc → library_proxy (manual handoff) → abstract_only**
 
-Earlier sources always win. Abstract-only is a valid terminal state — it is never an error, but it is flagged as lower-confidence and downstream cite-checks treat its claims accordingly.
+| Step | How (Cowork) | Notes |
+|---|---|---|
+| `user_pdf` | If state home is NotebookLM, add via `~~notebook publish` `source_add(source_type="file")`. Otherwise read inline or save to `pdfs/`. | Top priority. User-supplied PDFs always win the cascade. |
+| `unpaywall` | `WebFetch GET https://api.unpaywall.org/v2/{doi}?email={unpaywall_email}` → JSON; if `best_oa_location.url_for_pdf` is non-null, fetch that URL via `WebFetch`. | Free OA copies, ~50% recall on recent papers. Requires `unpaywall_email` from setting-up-scriptorium and `api.unpaywall.org` on the user's Cowork allowlist. |
+| `arxiv` | `WebFetch GET http://export.arxiv.org/api/query?search_query=ti:"{title}"+AND+au:"{author}"&max_results=3` → Atom XML; parse for `<link rel="alternate" type="application/pdf">`. | Preprints. Requires `export.arxiv.org` on the allowlist. |
+| `pmc` | If `~~biomed search` is connected and the corpus row has a PMCID, call `~~biomed search` `get_full_text_article(pmcid=…)`. | NIH OA full text — biomedical papers only. |
+| `library_proxy` | If `library_proxy_base` is set in `scriptorium-config`, generate the proxied URL: `{library_proxy_base}{quoted(paper.doi_url)}`. Hand the URL to the user with: *"I couldn't pull this through OA channels. Click this proxied URL to fetch through your library, then drag the PDF back here when downloaded."* Wait for upload before continuing on this paper. | Cowork's `WebFetch` cannot authenticate as the user to their library — only their browser can. This is a manual handoff, not a silent fetch. |
+| `abstract_only` | Use the abstract from the corpus row. Set `full_text_source: "abstract_only"` on resulting evidence rows. | Terminal fallback. Cite-check treats these claims as lower-confidence. |
 
 ## Workflow
 
 For each kept paper:
 
-1. **User PDF first.** If the user uploaded a PDF for this paper to the conversation:
-   - If state home is NotebookLM: add it via `~~notebook publish` `source_add(source_type="file", file_path=...)`. NotebookLM becomes the full-text store and you query its content via `notebook_query` for evidence.
-   - If state home is a document store: write the PDF to the `pdfs/` subfolder and read it inline.
-   - If state home is session-only: read the PDF inline; it does not persist.
-2. **PMC fallback.** If the paper has a PMCID in its corpus row and `~~biomed search` is connected, call `get_full_text_article(pmcid=…)` for NIH OA full text.
-3. **Abstract-only.** Otherwise, stay with the abstract from the corpus row. Set `full_text_source: "abstract_only"` on the resulting evidence rows.
-4. **Identify claims.** For each meaningful claim in the source, write one `EvidenceEntry` to the `evidence` artifact. Follow the unified shape: `{paper_id, locator, claim, quote, direction, concept, full_text_source}`.
-5. **Audit.** Append one entry per paper: `{phase: "extraction", action: "fulltext.resolved", details: {paper_id, source, n_pages_or_chars, n_evidence_rows}, status}`.
+1. **Try `user_pdf`** if the user uploaded a PDF.
+2. **Try `unpaywall`** if `unpaywall_email` is configured. Skip if `WebFetch` returns a host-not-allowlisted error and tell the user once per session: "Unpaywall is blocked by your Cowork network policy. Add `api.unpaywall.org` to your org's allowlist to enable it." Then continue with the cascade.
+3. **Try `arxiv`** for preprints, especially if the venue field looks like an arXiv ID or the DOI is a `10.48550/arxiv.*` pattern.
+4. **Try `pmc`** for biomedical papers with a PMCID.
+5. **Try `library_proxy` handoff** if the user has it configured. Generate the proxied URL, present it, and pause this paper's extraction until the user uploads or says *"skip."* Move to the next paper while waiting if the user prefers; pick up the proxied paper later when the upload appears.
+6. **Fall through to `abstract_only`.**
+
+For each step that succeeds, ingest the source content (PDF or abstract), identify meaningful claims, and write one `EvidenceEntry` per claim to the `evidence` artifact. Follow the unified shape: `{paper_id, locator, claim, quote, direction, concept, full_text_source}`.
+
+Append one audit entry per paper: `{phase: "extraction", action: "fulltext.resolved", details: {paper_id, source: <cascade step that won>, n_evidence_rows, isolation?: "per-paper-notebook"|"shared-notebook"}, status}`.
 
 ## Locator grammar
 
@@ -43,9 +52,13 @@ The synthesis layer reads these when verifying `[paper_id:locator]` tokens. Inve
 - `direction`: `positive` (evidence supports the concept), `negative` (contradicts), `mixed` (both directions in same paper), `neutral` (relevant but not directional).
 - `concept`: a short slug (`caffeine_wm_accuracy`, not "caffeine's effect on working memory accuracy in adults"). Downstream, `lit-contradiction-check` groups by concept.
 
+## Optional Scite enrichment
+
+If `~~citation context` (Scite) resolved during the connector probe, after writing each evidence row, optionally call `~~citation context` for the paper's DOI or claim and capture Scite's classification (`supporting` / `contrasting` / `mentioning`) into the row's `scite_classification` field. This is enrichment — it does not replace the human-readable `direction` field, which is read directly from the source. Scite's classification is most useful in `lit-contradiction-check`.
+
 ## NotebookLM-specific note
 
-When state home is NotebookLM, you have two options for evidence extraction:
+When state home is NotebookLM, choose isolation:
 
 - **Per-paper notebook (HIGH isolation).** Create a fresh notebook per paper, add only its PDF as a source, query for claims, write evidence rows back to the main review notebook, then delete the per-paper notebook. Cleanest, slowest.
 - **Single review notebook (MEDIUM isolation).** Add all PDFs as sources to one notebook and query each in turn. Faster, but cross-paper context bleeds — query prompts must explicitly name the paper id.
@@ -54,4 +67,4 @@ Default to per-paper isolation unless the user is quota-pressed. Record the choi
 
 ## Hand-off
 
-After every kept paper is extracted, report "N papers extracted, M evidence rows written" and hand off to `lit-synthesizing`.
+After every kept paper is extracted (or terminally marked abstract_only), report "N papers extracted, M evidence rows written, K papers fell through to abstract-only" and hand off to `lit-synthesizing`.

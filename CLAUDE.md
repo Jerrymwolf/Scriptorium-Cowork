@@ -1,6 +1,6 @@
 # scriptorium-cowork — repo-level context
 
-Scriptorium is a literature-review plugin for Claude Cowork. It runs through skills and MCPs only — no CLI, no hooks, no shell.
+This is the **Claude Cowork edition** of Scriptorium, a literature-review plugin. It is a sibling of the Claude Code edition (https://github.com/Jerrymwolf/Scriptorium) and was extracted into its own repo for cleaner Cowork-marketplace identity.
 
 ## What this plugin enforces (three disciplines)
 
@@ -8,9 +8,9 @@ Scriptorium is a literature-review plugin for Claude Cowork. It runs through ski
 2. **PRISMA audit trail.** Every search, screen, extraction, synthesis, and publish action appends one entry to an append-only audit log.
 3. **Contradiction surfacing.** Disagreement is named as camps, not averaged into bland consensus.
 
-## How it works
+## What's different from the Claude Code edition
 
-- **No CLI.** Pure skills + MCP.
+- **No CLI.** No `pipx install`, no `scriptorium` binary. Pure skills + MCP.
 - **No hooks.** Cowork has no PostToolUse or SessionStart hook system; the cite-check is enforced by `lit-synthesizing`'s mandatory final step, and the discipline preamble is loaded from `skills/using-scriptorium/INJECTION.md`.
 - **No slash commands.** Cowork dispatches via natural language; the README documents trigger phrases instead.
 - **Connector-agnostic.** Skills reference tool *categories* (`~~claim search`, `~~document store`, `~~notebook publish`) rather than specific products. The runtime probe in `using-scriptorium` resolves placeholders to whichever MCPs the user has connected. See `CONNECTORS.md`.
@@ -39,6 +39,28 @@ There are deliberately **no** `commands/`, `agents/`, or `hooks/` directories. C
 1. **Anthropic public Cowork plugin directory** — submit at `clau.de/plugin-directory-submission`. Highest-leverage discoverability.
 2. **GitHub Release with `.plugin` attached** — canonical versioned download.
 3. **Drag `.plugin` into Cowork chat** — simplest peer sharing; renders as rich preview with Accept button.
+
+## Releasing v0.1.3 and onward (the lazy way)
+
+After v0.1.2, releasing is one command. Two options:
+
+**Option A — local script.** From the repo root after bumping `plugin.json`, `marketplace.json`, and `CHANGELOG.md`:
+
+```bash
+./scripts/release.sh 0.1.3
+```
+
+The script preflights (gh auth, clean tree, version match, release doesn't exist), commits any pending changes, builds the .plugin, tags, pushes, cuts the GitHub release, attaches the artifact, and prints the share line. It extracts release notes from the version's CHANGELOG section automatically.
+
+**Option B — tag-triggered GitHub Action.** Also handled by `.github/workflows/release.yml`. Just bump versions, commit, tag, and push:
+
+```bash
+git commit -am "Release v0.1.3" && git tag v0.1.3 && git push && git push origin v0.1.3
+```
+
+The Action verifies version consistency, builds the .plugin, extracts release notes, and creates the release on GitHub. No local `gh` invocation needed.
+
+For the very first release on a fresh repo, see "First-time publish from Claude Code" below.
 
 ## First-time publish from Claude Code
 
@@ -89,3 +111,6 @@ gh release create vX.Y.Z \
   /tmp/scriptorium-cowork.plugin
 ```
 
+## Sister repo
+
+The Claude Code edition lives at `https://github.com/Jerrymwolf/Scriptorium`. Skill prose between the two should stay aligned in spirit; runtime-specific divergence is documented in CHANGELOG.md.
