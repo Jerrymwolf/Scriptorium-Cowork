@@ -2,6 +2,45 @@
 
 All notable changes to scriptorium-cowork are documented here.
 
+## 0.1.3 — 2026-04-30
+
+Three audit fixes that strengthen synthesis defensibility — evidence tiers in the schema, metadata-resolution-aware cite-check, and a same-question filter on contradictions.
+
+### Added — evidence tier (Concern 1)
+- New optional field on `EvidenceEntry`: `evidence_tier ∈ {meta_analysis, systematic_review, experimental, observational, cross_sectional, qualitative, theoretical_or_review}`. Set during extraction.
+- `lit-extracting` now includes a "Tagging the design tier" step that walks the model through which tier applies to a given claim, allowing different tiers per row from the same paper when methods sections mix designs.
+- `lit-synthesizing` Step 1 now modulates prose register by tier — meta-analyses produce declarative prose, RCTs produce qualified prose, cross-sectional studies produce correlational prose, etc. The tier name is named *explicitly in prose* (e.g., "a meta-analysis of fourteen trials shows…") so it survives the markdown→audio handoff to NotebookLM. The host model has no metadata channel; the prose is the channel.
+- Custom seven-tier scheme rather than GRADE / OCEBM / Cochrane, justified by the social-science / management / EdD/DBA target audience.
+
+### Added — metadata resolution (Concern 2)
+- New required field on `Paper`: `metadata_resolution ∈ {verified, partial, inferred}`. Set during search; propagates to `EvidenceEntry` at extraction.
+- `lit-searching` now includes assignment rules: `verified` requires DOI/PMID resolution or exact title+authors+year match; `partial` allows gap-filling from a related record; `inferred` covers any field constructed from prose context rather than a verified API response.
+- `lit-synthesizing` cite-check (Step 5) is now a **two-part check**: claim-to-evidence linkage AND citation metadata resolution. Strict mode blocks commit (`status: failure`) on **any** inferred citation — the threshold is binary, not probabilistic, because the README's "synthesis you can defend" promise can't tolerate guessed bibliographic data in a dissertation chapter.
+- New cite-check report format surfaces verified/partial/inferred counts with explicit warning glyphs.
+- Audit row gains `n_metadata_verified / n_metadata_partial / n_metadata_inferred`.
+
+### Changed — contradiction check (Concern 3)
+- `lit-contradiction-check` now runs a **two-stage check**. Stage 1 gathers direction-mismatch candidates as before. Stage 2 asks the model whether each candidate pair is answering the same question (same construct, population, timeframe, operationalization) — three-way output: `same_question` / `different_questions` / `uncertain`.
+- Three rendering templates replace the single named-camps template: same-question disagreements get the original camps framing; different-questions findings get a new "Findings vary across…" section that explicitly says they could both be true simultaneously; `uncertain` cases get flagged for human review rather than confidently mis-framed.
+- The `uncertain` bucket is the load-bearing piece — it makes the skill honest about the slug-fragility problem (informally-assigned `concept` slugs don't guarantee same-construct measurement). Better to flag five items for the user than to confidently mis-frame two.
+- Synthesis now renders contradictions under three separate headings instead of one: *"Where authors disagree on the same question"*, *"Where findings vary across populations / timeframes / operationalizations"*, *"Disagreements I couldn't classify."*
+- Audit row bifurcates: `n_candidates / n_same_question / n_different_questions / n_uncertain`.
+
+### Repositioned (README, plugin metadata)
+- **README lead and hero rewritten** to position Scriptorium as a research-direction-and-literature-review tool for graduate students and doctoral researchers — *"from a half-formed research idea to a defensible direction, with the literature to back it up"* — rather than as "lit review with podcast." The canonical doctoral workflow (idea → grill → research question → lit review → defensible synthesis) is the lead use case. The NotebookLM podcast / Studio artifacts are now framed as a downstream "neat function" — a real value-add and worth highlighting, but the convenience output of the workflow, not the workflow itself.
+- **"Three patterns that work"** expanded to four and reordered: doctoral workflow first, get-unstuck-on-vague-interest second, hand-draft-and-tape-to-committee third, get-smart-fast-for-meeting fourth.
+- **`plugin.json` and `marketplace.json` descriptions** updated to lead with the grad-student / doctoral-researcher audience and the idea-to-question-to-review pipeline. The directory submission text now matches what the tool actually does best.
+
+### Migration
+None required — `evidence_tier` and `metadata_resolution` are optional on existing rows. Reviews built with v0.1.2 continue to work; rows lacking the new fields render with the previous register (un-modulated). New reviews built with v0.1.3 get the full benefits. Re-extracting an existing review with v0.1.3 to populate the new fields is supported but not necessary.
+
+### Files touched
+- `skills/using-scriptorium/SKILL.md` — schema updates for `Paper`, `EvidenceEntry`, `AuditEntry`.
+- `skills/lit-searching/SKILL.md` — `metadata_resolution` assignment rules.
+- `skills/lit-extracting/SKILL.md` — `evidence_tier` tagging step + propagation of `metadata_resolution`.
+- `skills/lit-synthesizing/SKILL.md` — register-modulation rule + two-part cite-check + new report format.
+- `skills/lit-contradiction-check/SKILL.md` — two-stage check + three rendering templates.
+
 ## 0.1.2 — 2026-04-30
 
 Two new Pocock-style direction-elicitation skills, plus a direction-check at the top of `running-lit-review`.

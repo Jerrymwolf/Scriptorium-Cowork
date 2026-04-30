@@ -32,7 +32,8 @@ The audit log is the single source of truth for reconstructing what happened. Ev
 2. Screening:    <sum of `kept` across all `screening` actions> kept; <sum of `dropped`> dropped.
 3. Eligibility:  <count of papers reaching `extraction` with full_text_source != "abstract_only"> papers with full text.
 4. Included:     <count of papers with at least one row in evidence> papers contribute evidence.
-5. Contradictions: <count of concepts with n_pairs ≥ 1> concepts with positive/negative disagreement.
+5. Citation metadata: <n_metadata_verified verified · n_metadata_partial partial · n_metadata_inferred inferred> across the synthesis (most-recent verify entry).
+6. Contradictions: <sum of n_same_question across `contradiction-check` actions> same-question disagreements · <sum of n_different_questions> scope-variation findings · <sum of n_uncertain> uncertain.
 ```
 
 This is the skeleton of a PRISMA 2020 flow diagram. Tell the user they can hand it to a reference manager or diagramming tool to produce the actual figure for their thesis.

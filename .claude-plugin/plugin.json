@@ -1,7 +1,7 @@
 {
   "name": "scriptorium-cowork",
-  "version": "0.1.2",
-  "description": "Evidence-first, PRISMA-audited literature review for Claude Cowork. Every claim locator-cited, every search and screening decision logged, contradictions named instead of averaged. Connector-agnostic — works with whatever scholarly search and document store you've connected.",
+  "version": "0.1.3",
+  "description": "Research-direction-and-literature-review plugin for Claude Cowork. For graduate students, doctoral researchers, and anyone with a topic but no question yet: grills the idea into shape, generates a defensible research question, runs the literature review with a PRISMA audit trail, and ships a synthesis you could defend in committee. Optionally turns the finished review into a NotebookLM podcast, slide deck, or mind map. Connector-agnostic — works with whatever scholarly search and document store you've connected.",
   "author": {
     "name": "Jeremiah Wolf",
     "email": "jeremiahmwolf@gmail.com"
@@ -12,8 +12,14 @@
   "keywords": [
     "literature-review",
     "research",
+    "research-question",
+    "research-design",
+    "doctoral",
     "phd",
+    "edd",
+    "dba",
     "dissertation",
+    "graduate-student",
     "prisma",
     "citations",
     "evidence",

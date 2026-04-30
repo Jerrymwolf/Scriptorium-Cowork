@@ -49,7 +49,9 @@ Ask one question at a time, in this order. Skip any obvious from the conversatio
 
    If the user doesn't recognize their institution's pattern, suggest they check their library's website for "off-campus access" or "EZproxy" instructions, or try `<institution>.idm.oclc.org/login?url=` (OCLC hosts proxies for many universities). The agent does not authenticate to the proxy — it generates proxied URLs that the user clicks in their own browser, then drags the resulting PDF back into the chat.
 
-3. **Default cite-check mode.** Strict (strip unsupported sentences) or lenient (flag with `[UNSUPPORTED]`). Default to **strict** for any user who mentions dissertation, thesis, or systematic review; **lenient** for exploratory drafts.
+3. **Default cite-check mode.** Strict or lenient. Default to **strict** for any user who mentions dissertation, thesis, or systematic review; **lenient** for exploratory drafts. Tell the user what each mode does in v0.1.3:
+   - **Strict** blocks the synthesis from committing if (a) any sentence makes an empirical claim without a `[paper:loc]` citation, OR (b) any cited evidence row carries `metadata_resolution: "inferred"` (a guessed title, author, year, or DOI). Both are zero-tolerance. The audit log records `status: "failure"` and the user must fix before publishing.
+   - **Lenient** flags the same problems with `[UNSUPPORTED]` markers and warning entries in the cite-check report, but allows commit. The audit log records `status: "warning"`. Use this for exploratory drafts where you want to see what the cite-check catches without blocking forward progress.
 
 4. **Languages.** Default `["en"]`. Ask if the user is non-English-primary.
 

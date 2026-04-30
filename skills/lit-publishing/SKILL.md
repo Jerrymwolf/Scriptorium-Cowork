@@ -11,12 +11,12 @@ This skill is the bridge from a finished review to a downstream artifact (audio,
 
 Do not fire this skill until ALL of the following are true:
 
-- `synthesis` artifact exists and its most recent cite-check was `success` or `warning` with explicit user acknowledgment.
-- `contradictions` artifact exists (even if empty — `lit-contradiction-check` writes a one-liner when there are no pairs).
+- `synthesis` artifact exists and its most recent cite-check entry has `status: "success"` (strict mode) OR `status: "warning"` with explicit user acknowledgment (lenient mode).
+- `contradictions` artifact exists (even if empty — `lit-contradiction-check` writes a one-liner when there are no candidates).
 - `evidence` artifact exists.
-- The audit log shows at least one `synthesis.verify` entry with `n_unsupported_stripped == 0`.
+- The audit log's most recent `synthesis.verify` entry has `n_unsupported_stripped == 0` AND `n_metadata_inferred == 0` for strict mode. In lenient mode, surface both counts to the user before proceeding and require explicit confirmation: *"Your most recent cite-check flagged N inferred citations and M unsupported sentences. Publishing will upload them as-is. Proceed?"*
 
-If any of these fail, refuse to publish and say which precondition is missing. Hand back to the appropriate skill.
+If any precondition fails, refuse to publish and say which one. Hand back to the appropriate skill (usually `lit-synthesizing` for re-running the cite-check).
 
 ## Workflow — `~~notebook publish` connected
 

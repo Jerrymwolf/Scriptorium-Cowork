@@ -1,12 +1,12 @@
 # Scriptorium for Cowork
 
-**Run a literature review you can defend — and turn it into a podcast on the way to your meeting.**
+**From a half-formed research idea to a defensible direction — with the literature to back it up.**
 
-Scriptorium is a literature-review plugin for Claude Cowork. You give it a research question; it searches the literature, cites every claim to a paper and page, names contradictions instead of averaging them away, and logs every decision to a PRISMA-style audit trail. When the review is done, it pushes your corpus into NotebookLM and turns it into a podcast, video, slide deck, mind map, study guide, FAQ, timeline, or quiz — each artifact grounded in the papers you actually read.
+Scriptorium is a research-direction and literature-review plugin for Claude Cowork. Built for graduate students, doctoral researchers, and anyone who has a topic but doesn't yet have a research question. It grills your idea into shape, helps you generate a defensible research question, runs the lit review with a PRISMA-style audit trail, names contradictions where the field actually disagrees, and ships a synthesis chapter you could put in front of a committee.
 
 No CLI. No local shell. No hooks. Pure skills + the MCPs you've already connected.
 
-> **The single highest-leverage use:** It's 9 PM. Tomorrow morning you have a meeting on a topic you don't own yet. Tonight you say *"run a lit review on X"* in Cowork — twelve minutes later you have a defensible synthesis with full audit trail. You ask for an audio overview. During the commute, you listen to a host-style podcast walking through the literature, every claim cited. You walk into the meeting with the actual research in your head, not a hot take.
+> **The canonical doctoral workflow:** You know what you're interested in — something about leadership and remote work, or caffeine and cognition, or whatever's been nagging at you. But *"I want to research X"* isn't a research question yet. Finding the question requires reading literature you haven't read, and reading the literature efficiently requires knowing what you're looking for. Classic chicken-and-egg. Scriptorium breaks the loop: grill the idea into shape, generate the question with you, run the lit review with full audit trail, surface contradictions, and ship a synthesis chapter you'd defend. *(And then, if you want a podcast for the commute, that's one more sentence.)*
 
 ---
 
@@ -40,7 +40,7 @@ Three turns, one decision per turn, ends with a concrete next action. Same shape
 
 ## What it produces
 
-After roughly twelve minutes on a well-scoped question, Scriptorium hands you four artifacts:
+Once you have a research question (yours from the start, or one you grilled out together), the lit review runs in roughly twelve minutes and hands you four artifacts:
 
 - **`synthesis`** — your draft chapter. Every sentence carries a `[paper_id:locator]` token that resolves to a real paper and page. Sentences without evidence are stripped or flagged before commit. No hallucinated citations.
 - **`evidence`** — one row per claim, structured: `{paper_id, locator, claim, quote, direction, concept}`. The synthesis layer reads this; you can re-query it however you want.
@@ -56,25 +56,31 @@ A row of evidence:
   "claim": "Caffeine at 75–150mg improves sustained attention in healthy adults",
   "quote": "Doses between 75 and 150 mg improve sustained attention and vigilance...",
   "direction": "positive",
-  "concept": "attention"
+  "concept": "attention",
+  "evidence_tier": "systematic_review",
+  "metadata_resolution": "verified"
 }
 ```
+
+`evidence_tier` modulates how the synthesis layer renders the claim — meta-analyses produce declarative prose, RCTs produce qualified prose, cross-sectional studies produce correlational prose. The tier is named *explicitly in prose* so the signal survives the markdown→audio handoff to NotebookLM. `metadata_resolution` is verified / partial / inferred — strict mode blocks commit on any inferred citation.
 
 A fragment of synthesis:
 
 ```markdown
-Caffeine at 75–150mg doses reliably improves sustained attention [nehlig2010:page:4],
-though effects on working memory are mixed: short-term recall shows gains in healthy
-adults [smith2018:page:7], while complex span tasks show no benefit [kennedy2017:page:12].
+A systematic review of caffeine's cognitive effects reports improvements in sustained
+attention at 75–150mg doses [nehlig2010:page:4]. Effects on working memory are mixed:
+in a randomized trial of 48 healthy adults, short-term recall improved [smith2018:page:7],
+while a single cross-sectional study of complex span tasks found no benefit
+[kennedy2017:page:12].
 ```
 
-Every bracketed token resolves to a real row. Unsupported citations fail the cite-check before the file commits.
+Every bracketed token resolves to a real row. Note the explicit tier framing — *"a systematic review"*, *"a randomized trial of 48 healthy adults"*, *"a single cross-sectional study"* — so a podcast listener hears the evidence-quality hierarchy even when the citation tokens are stripped.
 
 ---
 
-## Then turn it into anything
+## Then turn it into anything (the neat-function part)
 
-Once the review passes its cite-check, say *"publish this as a podcast,"* *"make a deck for committee,"* or *"send this to NotebookLM."* Scriptorium uploads the entire corpus — synthesis, contradictions, evidence, every PDF — into a fresh NotebookLM notebook and triggers Studio artifact generation. Each artifact cites the actual papers.
+Once the review passes its cite-check, say *"publish this as a podcast,"* *"make a deck for committee,"* or *"send this to NotebookLM."* Scriptorium uploads the entire corpus — synthesis, contradictions, evidence, every PDF — into a fresh NotebookLM notebook and triggers Studio artifact generation. Each artifact cites the actual papers. This is the part that gets people excited at conferences and is genuinely useful, but it's the *output* of the workflow, not the workflow itself. The defensible review is the substance; the podcast is the convenience.
 
 | Artifact | What it's for |
 |---|---|
@@ -160,16 +166,19 @@ If nothing is connected, Scriptorium runs in degraded mode (WebFetch against Ope
 
 In any Cowork chat:
 
-> Run a lit review on caffeine and working memory in healthy adults.
+> I'm working on a chapter about how organizational leaders maintain trust during remote work, but I haven't pinned down the research question yet. Grill me on this.
 
-Scriptorium probes which connectors you have, asks 3–5 clarifying questions about scope (purpose, fields, year range, target corpus size), then runs **search → screen → extract → synthesize → contradiction-check → audit**. Twelve minutes later it reports back:
+Scriptorium fires `research-grill-me` first. Three to five turns surface that you're heading toward a dissertation chapter, the audience is your committee, the depth is "mastery," and the tradition leans qualitative. The skill notices you're past the topic-only stage and routes you into `research-questions-grill-me` to pin the actual question. A few more turns produce something defensible — say, *"How do remote-work managers in mid-sized SaaS companies sustain interpersonal trust across distributed teams over the first 90 days of onboarding?"* — with sub-questions and named boundaries.
+
+Then the lit review runs: connector probe, scope confirmation, search → screen → extract → synthesize → contradiction-check → audit. Twelve minutes later it reports back:
 
 ```
 Corpus:        137 returned, 92 deduped, 41 kept after screening
 Full-text:     28/41 (68%)
-Evidence rows: 86
-Cite-check:    0 unsupported sentences
-Contradictions: 3 concepts with positive/negative pairs
+Evidence rows: 86 total — 4 meta-analysis · 12 experimental · 38 observational ·
+                          14 cross-sectional · 18 qualitative
+Cite-check:    0 unsupported sentences · 132 verified · 8 partial · 0 inferred ✓
+Contradictions: 2 same-question disagreements · 4 scope-variation findings · 1 uncertain
 
 Outputs: synthesis, contradictions, audit-jsonl, references
 ```
@@ -178,13 +187,15 @@ Then: *"Want a podcast, deck, mind map, or video of this review, or are we done?
 
 ---
 
-## Three patterns that work
+## Patterns that work
 
-**Get smart fast on an unfamiliar topic.** Tonight: scope a review. Twelve minutes later: defensible synthesis. Morning: ask for the audio overview. Commute: listen. You walk into the meeting with the literature in your head.
+**1. Idea → question → chapter — the canonical doctoral workflow.** You're working on a dissertation chapter or capstone but the research question isn't yet pinned down. Say *"grill me on this topic"*. Three turns surface what you actually want from the work. Two more turns generate a defensible question with sub-questions, boundaries, and tradition. The lit review then fires and produces a synthesis chapter, locator-cited, with a PRISMA audit trail. The output is a chapter draft you'd defend. This is what Scriptorium is built for first.
 
-**Stack reviews into meta-synthesis.** Run three targeted reviews (*caffeine and attention*, *caffeine and working memory*, *caffeine and executive function*). Publish all three corpora into one NotebookLM notebook. Ask the combined corpus questions you couldn't ask any single review.
+**2. Get unstuck on a vague research interest.** You have a topic that's been nagging you but you can't articulate the question. Say *"grill me on this topic"* and let `research-grill-me` push you through the purpose / audience / artifact decisions you've been avoiding. Sometimes the answer is *"this is a strategy memo, not a paper."* Sometimes it's *"this is a real research question — let me grill it out."* Either way you exit knowing what you're doing and why.
 
-**Hand a draft and a tape to your committee.** Synthesis as a markdown chapter, audit trail as proof of method, audio overview as a 12-minute "here's what the literature says" briefing your committee can listen to before the defense.
+**3. Hand a draft and a tape to your committee.** Synthesis as a markdown chapter, audit trail as proof of method, audio overview as a 12-minute *"here's what the literature says"* briefing your committee can listen to before the defense. Three artifacts that answer three different committee questions: *"What does the literature say?"*, *"How did you search?"*, *"Can you give me the gist on the way to my office hours?"*.
+
+**And one more thing — get smart fast for a meeting.** Find-literature-then-make-a-podcast is its own neat flow, even outside doctoral work. Tonight: scope a quick review on a topic you don't own yet. Morning: ask for the audio overview. Commute: listen. You walk into the meeting with the actual literature in your head, not a hot take. Not the lead use case but a great one — works the same pipeline, just with a tighter scope and a heavier reliance on the publishing layer.
 
 ---
 

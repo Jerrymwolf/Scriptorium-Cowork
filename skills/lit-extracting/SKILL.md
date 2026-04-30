@@ -33,7 +33,37 @@ For each kept paper:
 5. **Try `library_proxy` handoff** if the user has it configured. Generate the proxied URL, present it, and pause this paper's extraction until the user uploads or says *"skip."* Move to the next paper while waiting if the user prefers; pick up the proxied paper later when the upload appears.
 6. **Fall through to `abstract_only`.**
 
-For each step that succeeds, ingest the source content (PDF or abstract), identify meaningful claims, and write one `EvidenceEntry` per claim to the `evidence` artifact. Follow the unified shape: `{paper_id, locator, claim, quote, direction, concept, full_text_source}`.
+For each step that succeeds, ingest the source content (PDF or abstract), identify meaningful claims, and write one `EvidenceEntry` per claim to the `evidence` artifact. Follow the unified shape: `{paper_id, locator, claim, quote, direction, concept, evidence_tier, full_text_source, metadata_resolution}`. Inherit `metadata_resolution` from the corpus row's `Paper`.
+
+## Tagging the design tier
+
+Set `evidence_tier` for each row based on the paper's study design (read methods or abstract):
+
+- `meta_analysis` — pooled effect-size estimate across multiple primary studies
+- `systematic_review` — structured synthesis without effect-size pooling
+- `experimental` — manipulation of an independent variable, with or without random assignment (RCT, quasi-experimental, single-case design all fold here)
+- `observational` — longitudinal or cohort design without manipulation
+- `cross_sectional` — single-timepoint survey, correlational
+- `qualitative` — interviews, ethnography, phenomenology, grounded theory, content analysis
+- `theoretical_or_review` — narrative review, conceptual paper, position piece, expert commentary
+
+When the design is ambiguous (e.g., a paper mixing ethnographic interviews with a cross-sectional survey), pick the tier that best describes the methods supporting the **specific claim** you're extracting — not the paper as a whole. Different rows from the same paper may carry different tiers.
+
+A complete `EvidenceEntry` example:
+
+```json
+{
+  "paper_id": "smith2018",
+  "locator": "page:7",
+  "claim": "Caffeine at 200mg improves digit-span recall in healthy adults",
+  "quote": "Recall accuracy was significantly higher in the 200mg group (M=8.2, SD=1.3) than placebo (M=7.4, SD=1.5), t(46)=2.1, p=.04.",
+  "direction": "positive",
+  "concept": "caffeine_wm_recall",
+  "evidence_tier": "experimental",
+  "full_text_source": "unpaywall",
+  "metadata_resolution": "verified"
+}
+```
 
 Append one audit entry per paper: `{phase: "extraction", action: "fulltext.resolved", details: {paper_id, source: <cascade step that won>, n_evidence_rows, isolation?: "per-paper-notebook"|"shared-notebook"}, status}`.
 

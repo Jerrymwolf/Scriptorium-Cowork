@@ -38,10 +38,10 @@ When the pipeline exits, tell the user exactly:
 
 - **Corpus size**: N returned, M deduped, K kept after screening.
 - **Full-text rate**: `fetched / kept` (e.g. 28/42).
-- **Evidence rows**: total rows in `evidence`.
-- **Verify result**: unsupported sentences caught (0 is the goal; any non-zero means the cite-check fired).
-- **Contradiction pairs**: count, with the concepts involved.
-- **Outputs**: paths or note titles for `synthesis`, `audit-md`, `references` (if exported), and any NotebookLM Studio artifacts.
+- **Evidence rows**: total rows in `evidence`, with tier breakdown (e.g., 86 rows: 4 meta-analysis · 12 experimental · 38 observational · 14 cross-sectional · 18 qualitative).
+- **Cite-check**: unsupported sentences (0 is the goal); citation metadata resolution (verified / partial / inferred). In strict mode, any inferred ⇒ failure.
+- **Contradictions**: three-bucket breakdown — N same-question disagreements · M scope-variation findings · K uncertain.
+- **Outputs**: paths or note titles for `synthesis`, `contradictions`, `audit-md`, `references` (if exported), and any NotebookLM Studio artifacts.
 
 End with a single question: "Do you want a podcast / slide deck / mind map / video of this review, or are we done?"
 

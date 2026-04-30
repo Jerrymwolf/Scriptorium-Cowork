@@ -101,9 +101,12 @@ Every downstream skill reads/writes through this mapping. Skills never hardcode 
 
 Both runtimes agree on these. Skills never invent variants.
 
-- **Paper:** `{paper_id, source, title, authors[], year, doi, abstract, venue, open_access_url}`
-- **EvidenceEntry:** `{paper_id, locator, claim, quote, direction: positive|negative|neutral|mixed, concept, scite_classification?: supporting|contrasting|mentioning}`
-- **AuditEntry:** `{phase, action, details{}, ts, status}` where `status ∈ {success, warning, failure, partial, skipped}`
+- **Paper:** `{paper_id, source, title, authors[], year, doi, abstract, venue, open_access_url, metadata_resolution: "verified" | "partial" | "inferred"}`
+  - `metadata_resolution` is set by `lit-searching` when the paper enters the corpus. `verified` = DOI/PMID resolves to a real publisher record OR title+authors+year exact-matches a single OpenAlex/Semantic Scholar record. `partial` = at least one of those resolves but other fields are gap-filled from a related record. `inferred` = any of `{title, authors, year, doi}` was constructed from prose context rather than a verified API response.
+- **EvidenceEntry:** `{paper_id, locator, claim, quote, direction: positive|negative|neutral|mixed, concept, evidence_tier?: meta_analysis | systematic_review | experimental | observational | cross_sectional | qualitative | theoretical_or_review, scite_classification?: supporting|contrasting|mentioning, full_text_source?, metadata_resolution?}`
+  - `evidence_tier` is captured during extraction (see `lit-extracting`). The synthesis layer uses it to modulate prose register — a meta-analysis row produces declarative prose; a cross-sectional row produces correlational prose. The tier name appears explicitly in synthesis prose ("a meta-analysis of fourteen trials shows…") so it survives the markdown→audio handoff to NotebookLM.
+  - `metadata_resolution` mirrors the corresponding `Paper`'s value at extraction time; the cite-check uses it.
+- **AuditEntry:** `{phase, action, details{}, ts, status}` where `status ∈ {success, warning, failure, partial, skipped}`. Synthesis-verify entries gain `n_metadata_verified / n_metadata_partial / n_metadata_inferred` in `details`. Contradiction-check entries gain `n_same_question / n_different_questions / n_uncertain` in `details` (see `lit-contradiction-check`).
 
 ## When to fire which skill
 

@@ -5,15 +5,15 @@
     "email": "jeremiahmwolf@gmail.com"
   },
   "metadata": {
-    "description": "Scriptorium for Claude Cowork — evidence-first, PRISMA-audited literature review. Connector-agnostic; works with whatever scholarly-search and document MCPs you have connected.",
-    "version": "0.1.2",
+    "description": "Scriptorium for Claude Cowork — from a half-formed research idea to a defensible literature review. Grills the topic into a researchable question, runs the lit review with full audit trail, optionally turns the finished review into a NotebookLM podcast or slide deck. Designed for doctoral researchers and grad students.",
+    "version": "0.1.3",
     "homepage": "https://github.com/Jerrymwolf/Scriptorium-Cowork"
   },
   "plugins": [
     {
       "name": "scriptorium-cowork",
-      "description": "Cowork-only edition of Scriptorium. No CLI, no hooks, no shell — pure skills + MCP. Every claim locator-cited, every search/screen decision logged, contradictions named instead of averaged.",
-      "version": "0.1.2",
+      "description": "Cowork-only edition of Scriptorium. From rough research idea to defensible lit review: grill-me skills surface what you actually want to research, then the pipeline runs search → screen → extract → synthesize → contradiction-check → audit. Pure skills + MCP, no CLI. Every claim locator-cited, every decision logged, contradictions named instead of averaged. Optional NotebookLM publishing for podcast / deck / mind-map output.",
+      "version": "0.1.3",
       "author": {
         "name": "Jeremiah Wolf",
         "email": "jeremiahmwolf@gmail.com"

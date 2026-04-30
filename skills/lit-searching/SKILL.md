@@ -47,7 +47,10 @@ Corpus-building turns are tool-to-tool: read the search result, write to the sta
    - `~~claim search` — call the Consensus-style search tool; apply the fencing rule above.
    - `~~breadth search` — call Scholar Gateway / OpenAlex via its MCP.
    - `~~biomed search` — call PubMed `search_articles`, then `get_article_metadata` per PMID for DOIs and abstracts.
-4. Normalize every result to the unified `Paper` shape: `{paper_id, source, title, authors[], year, doi, abstract, venue, open_access_url}`. The `paper_id` is the source's native identifier (OpenAlex `W…`, PubMed PMID, Consensus internal id) — invent nothing.
+4. Normalize every result to the unified `Paper` shape: `{paper_id, source, title, authors[], year, doi, abstract, venue, open_access_url, metadata_resolution}`. The `paper_id` is the source's native identifier (OpenAlex `W…`, PubMed PMID, Consensus internal id) — invent nothing. Set `metadata_resolution`:
+   - `verified` — DOI or PMID resolves via API; OR title+authors+year exact-matches a single record.
+   - `partial` — one of those resolves but other fields are gap-filled from a related record (e.g., DOI resolves but the abstract had to be pulled from a different snapshot).
+   - `inferred` — any of `{title, authors, year, doi}` was constructed from prose context rather than a verified API response. **Mark this honestly.** A title you reconstructed from a partial Consensus snippet is `inferred`, not `verified`. The cite-check downstream treats inferred metadata as a hard block in strict mode — silent over-claiming here breaks the audit trail's promise.
 5. Dedupe in-memory by DOI → `(source, paper_id)` → normalized title. The strongest key is DOI; if two rows share a DOI, keep the one with the richer record (non-empty abstract, venue, authors). Last-resort fallback for normalized title: `re.sub(r"[^a-z0-9]+", " ", title.lower()).strip()`.
 6. Write the deduped corpus to the `corpus` artifact via the state adapter. Format depends on state home — see the mapping in `using-scriptorium`.
 7. Append one audit entry per source query: `{phase: "search", action: "<source>.query", details: {query, n_results, n_after_dedupe}, status}`.
