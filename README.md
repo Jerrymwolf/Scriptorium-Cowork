@@ -2,7 +2,7 @@
 
 **A literature review workflow you can defend — entirely inside Claude Cowork.**
 
-This is the Cowork-native edition of [Scriptorium](https://github.com/Jerrymwolf/Scriptorium). It runs without a CLI, without local shell access, and without the Claude Code hook system. Everything happens through Cowork skills and the MCPs you've already connected.
+Scriptorium runs entirely inside Claude Cowork — through skills and the MCPs you've already connected. No CLI required, no local shell access, no hook system.
 
 ## What it does
 
@@ -12,17 +12,20 @@ Scriptorium turns the middle third of a literature review — search through syn
 - **A committee-ready audit trail.** Every query, screening decision, extraction, and synthesis verify is timestamped and stored in append-only `audit.jsonl`. Your methods chapter has a receipt.
 - **Named contradictions.** When two papers disagree on the same concept, Scriptorium names the camps. Disagreement survives into your draft instead of getting smoothed into false consensus.
 
-## What's different from the Claude Code edition
+## Why Scriptorium
 
-| | Claude Code edition | Cowork edition |
-|---|---|---|
-| Install | `pipx install scriptorium-cli` + `/marketplace add` | Upload `.plugin` file in Cowork settings |
-| Storage | Plain files on disk | NotebookLM, Drive/Box, Notion, or session-only — your choice |
-| Search | OpenAlex + Semantic Scholar via CLI | Whichever scholarly-search MCPs you've connected |
-| Cite-check | PostToolUse hook + skill | Skill only (no hooks in Cowork) |
-| Publishing | `scriptorium publish` shells out to `nlm` | Direct calls to NotebookLM MCP |
+Scriptorium isn't a search engine. It's a workflow. Elicit answers questions. Consensus surfaces claims. ResearchRabbit maps citation networks. Scite checks whether a paper is supported or contradicted. **Scriptorium takes what those tools produce and turns it into a defensible chapter with an audit trail.** Use it alongside them, not instead of them.
 
-The skill prose is identical in spirit. Same three disciplines, same locator citation grammar, same PRISMA audit shape.
+|                          | Scriptorium       | Elicit             | Consensus       | ResearchRabbit   | Scite           |
+|--------------------------|-------------------|--------------------|-----------------|------------------|-----------------|
+| Primary job              | Workflow + audit  | Question answering | Claim search    | Citation graph   | Claim check     |
+| Locator-cited extraction | ✅                | Partial            | ❌              | ❌               | ❌              |
+| PRISMA-style audit log   | ✅                | ❌                 | ❌              | ❌               | ❌              |
+| Names disagreement       | ✅                | ❌                 | Partial         | ❌               | ✅              |
+| Output is a draft        | ✅ (`synthesis.md`) | Summary          | Answer card     | Graph            | Badges          |
+| Your corpus stays local  | ✅                | ❌                 | ❌              | ❌               | ❌              |
+
+If your review needs to **cite its sources and survive committee scrutiny**, Scriptorium is the layer that turns the other tools' output into a chapter.
 
 ## Install
 

@@ -94,5 +94,5 @@ Scoping (phase 1) and final writing (phases 7+) stay with the user — Scriptori
 
 - **No PostToolUse hooks.** Cite-checks and gate enforcement live entirely in skill prose. The discipline checkpoint at the end of `lit-synthesizing` is authoritative — do not skip it on the assumption that something downstream will catch a missing citation.
 - **No local filesystem.** Every artifact lives in the state home you picked at the top of the session. There is no `cwd` to fall back to.
-- **No bash.** This plugin does not invoke a CLI. If a user asks about the `scriptorium` CLI, point them to the Claude Code edition; this Cowork edition is a pure skill-and-MCP plugin.
+- **No bash.** This plugin does not invoke a CLI. Scriptorium runs entirely through skills and MCP.
 - **Session-only is real degradation.** If the probe selected session-only, warn the user every time you write an artifact that it will not persist, and offer to export to a connector once one is added.

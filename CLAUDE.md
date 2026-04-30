@@ -1,6 +1,6 @@
 # scriptorium-cowork — repo-level context
 
-This is the **Claude Cowork edition** of Scriptorium, a literature-review plugin. It is a sibling of the Claude Code edition (https://github.com/Jerrymwolf/Scriptorium) and was extracted into its own repo for cleaner Cowork-marketplace identity.
+Scriptorium is a literature-review plugin for Claude Cowork. It runs through skills and MCPs only — no CLI, no hooks, no shell.
 
 ## What this plugin enforces (three disciplines)
 
@@ -8,9 +8,9 @@ This is the **Claude Cowork edition** of Scriptorium, a literature-review plugin
 2. **PRISMA audit trail.** Every search, screen, extraction, synthesis, and publish action appends one entry to an append-only audit log.
 3. **Contradiction surfacing.** Disagreement is named as camps, not averaged into bland consensus.
 
-## What's different from the Claude Code edition
+## How it works
 
-- **No CLI.** No `pipx install`, no `scriptorium` binary. Pure skills + MCP.
+- **No CLI.** Pure skills + MCP.
 - **No hooks.** Cowork has no PostToolUse or SessionStart hook system; the cite-check is enforced by `lit-synthesizing`'s mandatory final step, and the discipline preamble is loaded from `skills/using-scriptorium/INJECTION.md`.
 - **No slash commands.** Cowork dispatches via natural language; the README documents trigger phrases instead.
 - **Connector-agnostic.** Skills reference tool *categories* (`~~claim search`, `~~document store`, `~~notebook publish`) rather than specific products. The runtime probe in `using-scriptorium` resolves placeholders to whichever MCPs the user has connected. See `CONNECTORS.md`.
@@ -89,6 +89,3 @@ gh release create vX.Y.Z \
   /tmp/scriptorium-cowork.plugin
 ```
 
-## Sister repo
-
-The Claude Code edition lives at `https://github.com/Jerrymwolf/Scriptorium`. Skill prose between the two should stay aligned in spirit; runtime-specific divergence is documented in CHANGELOG.md.

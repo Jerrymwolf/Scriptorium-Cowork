@@ -14,14 +14,7 @@ Initial Cowork-native release of Scriptorium.
 - Hard-gate cite-check at the end of `lit-synthesizing` (replaces the CC PostToolUse hook).
 - Privacy gate in `lit-publishing` requiring explicit user consent before any upload to NotebookLM.
 
-### Differs from the Claude Code edition
-- No CLI required — pure skills + MCP.
-- No PostToolUse hooks (Cowork has no hook system); discipline lives in skill prose.
-- No slash commands (Cowork dispatches via natural language); README lists trigger phrases.
-- Connector-agnostic — works with whichever scholarly-search MCPs the user has connected, not just OpenAlex/Semantic Scholar.
-- Full-text cascade collapses to `user_pdf → pmc → abstract_only` (Unpaywall and arXiv unavailable in Cowork).
-
 ### Known limitations
 - Connector probe in `using-scriptorium` uses prefix matching on MCP tool names; non-standard MCP server names may need a manual override.
-- Reviewer-branch agents (`lit-cite-reviewer`, `lit-contradiction-reviewer`) from the Claude Code edition are not yet ported — synthesis-exit cite-check runs inline.
+- Reviewer-branch agents (`lit-cite-reviewer`, `lit-contradiction-reviewer`) are not yet implemented — synthesis-exit cite-check runs inline.
 - On Cowork for Windows, the in-chat `.plugin` rich preview can fail (issue #50041 in claude-code repo); fall back to Settings → Plugins → Upload.

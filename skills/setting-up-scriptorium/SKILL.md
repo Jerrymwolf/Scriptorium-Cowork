@@ -7,7 +7,7 @@ description: Use on first run, when the user asks "set up Scriptorium", "what do
 
 This is the on-ramp. It runs once per user, takes about a minute, and ends with the user ready to scope their first review.
 
-There is **no CLI to install**. This Cowork edition is pure skills and MCP. If the user expected to run `pipx install scriptorium-cli`, tell them that's the Claude Code edition; this Cowork plugin works without it.
+There is **no CLI to install**. Scriptorium runs as pure skills and MCP. If the user asks about a `scriptorium` binary, tell them this plugin works without it.
 
 ## Step 1 — Fire `using-scriptorium`
 
