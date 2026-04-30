@@ -2,6 +2,16 @@
 
 All notable changes to scriptorium-cowork are documented here.
 
+## 0.1.1 — 2026-04-29
+
+README revision — leads with the podcast/NotebookLM use case.
+
+### Changed
+- Reframed README around the highest-leverage use pattern: defensible review tonight, podcast for the commute, walk into the meeting with the literature in your head.
+- Added concrete output samples (evidence row + synthesis fragment) and three use-pattern vignettes (get smart fast, stack reviews, hand committee a draft + tape).
+- Promoted the NotebookLM artifact menu (podcast, video, deck, mind map, briefing doc, study guide, FAQ, timeline, quiz, chat) with MCP-automated vs. UI-driven labeling.
+- Restored a sister-project link to the Claude Code edition under License & Credits.
+
 ## 0.1.0 — 2026-04-29
 
 Initial Cowork-native release of Scriptorium.

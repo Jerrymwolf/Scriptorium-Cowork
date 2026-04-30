@@ -1,42 +1,109 @@
 # Scriptorium for Cowork
 
-**A literature review workflow you can defend — entirely inside Claude Cowork.**
+**Run a literature review you can defend — and turn it into a podcast on the way to your meeting.**
 
-Scriptorium runs entirely inside Claude Cowork — through skills and the MCPs you've already connected. No CLI required, no local shell access, no hook system.
+Scriptorium is a literature-review plugin for Claude Cowork. You give it a research question; it searches the literature, cites every claim to a paper and page, names contradictions instead of averaging them away, and logs every decision to a PRISMA-style audit trail. When the review is done, it pushes your corpus into NotebookLM and turns it into a podcast, video, slide deck, mind map, study guide, FAQ, timeline, or quiz — each artifact grounded in the papers you actually read.
 
-## What it does
+No CLI. No local shell. No hooks. Pure skills + the MCPs you've already connected.
 
-Scriptorium turns the middle third of a literature review — search through synthesis — into a disciplined, auditable workflow. It produces:
+> **The single highest-leverage use:** It's 9 PM. Tomorrow morning you have a meeting on a topic you don't own yet. Tonight you say *"run a lit review on X"* in Cowork — twelve minutes later you have a defensible synthesis with full audit trail. You ask for an audio overview. During the commute, you listen to a host-style podcast walking through the literature, every claim cited. You walk into the meeting with the actual research in your head, not a hot take.
 
-- **A defensible synthesis.** Every sentence carries a `[paper_id:locator]` token that resolves to a row in your evidence store. Unsupported sentences are stripped or flagged before commit.
-- **A committee-ready audit trail.** Every query, screening decision, extraction, and synthesis verify is timestamped and stored in append-only `audit.jsonl`. Your methods chapter has a receipt.
-- **Named contradictions.** When two papers disagree on the same concept, Scriptorium names the camps. Disagreement survives into your draft instead of getting smoothed into false consensus.
-- **Publishing-ready artifacts.** Push the finished review into NotebookLM and turn it into a podcast, video, slide deck, mind map, briefing doc, study guide, FAQ, timeline, or quiz — or chat the literature directly. See [Publish to NotebookLM](#publish-to-notebooklm).
+---
 
-## Why Scriptorium
+## What it produces
 
-Scriptorium isn't a search engine. It's a workflow. Elicit answers questions. Consensus surfaces claims. ResearchRabbit maps citation networks. Scite checks whether a paper is supported or contradicted. **Scriptorium takes what those tools produce and turns it into a defensible chapter with an audit trail.** Use it alongside them, not instead of them.
+After roughly twelve minutes on a well-scoped question, Scriptorium hands you four artifacts:
 
-|                          | Scriptorium       | Elicit             | Consensus       | ResearchRabbit   | Scite           |
-|--------------------------|-------------------|--------------------|-----------------|------------------|-----------------|
-| Primary job              | Workflow + audit  | Question answering | Claim search    | Citation graph   | Claim check     |
-| Locator-cited extraction | ✅                | Partial            | ❌              | ❌               | ❌              |
-| PRISMA-style audit log   | ✅                | ❌                 | ❌              | ❌               | ❌              |
-| Names disagreement       | ✅                | ❌                 | Partial         | ❌               | ✅              |
-| Output is a draft        | ✅ (`synthesis.md`) | Summary          | Answer card     | Graph            | Badges          |
-| Your corpus stays local  | ✅                | ❌                 | ❌              | ❌               | ❌              |
+- **`synthesis`** — your draft chapter. Every sentence carries a `[paper_id:locator]` token that resolves to a real paper and page. Sentences without evidence are stripped or flagged before commit. No hallucinated citations.
+- **`evidence`** — one row per claim, structured: `{paper_id, locator, claim, quote, direction, concept}`. The synthesis layer reads this; you can re-query it however you want.
+- **`contradictions`** — when papers disagree on the same concept, Scriptorium names the camps. *"Camp A (smith2018, chen2020) reports gains; Camp B (kennedy2017) reports null results. Methodological difference: span-task complexity."* Disagreement survives into the draft instead of getting smoothed into false consensus.
+- **`audit-jsonl`** — every search query, screening decision, extraction call, synthesis verify, and publish event. Append-only, status-tagged. When your committee asks *"how did you search?"* you show them the file.
 
-If your review needs to **cite its sources and survive committee scrutiny**, Scriptorium is the layer that turns the other tools' output into a chapter.
+A row of evidence:
+
+```json
+{
+  "paper_id": "nehlig2010",
+  "locator": "page:4",
+  "claim": "Caffeine at 75–150mg improves sustained attention in healthy adults",
+  "quote": "Doses between 75 and 150 mg improve sustained attention and vigilance...",
+  "direction": "positive",
+  "concept": "attention"
+}
+```
+
+A fragment of synthesis:
+
+```markdown
+Caffeine at 75–150mg doses reliably improves sustained attention [nehlig2010:page:4],
+though effects on working memory are mixed: short-term recall shows gains in healthy
+adults [smith2018:page:7], while complex span tasks show no benefit [kennedy2017:page:12].
+```
+
+Every bracketed token resolves to a real row. Unsupported citations fail the cite-check before the file commits.
+
+---
+
+## Then turn it into anything
+
+Once the review passes its cite-check, say *"publish this as a podcast,"* *"make a deck for committee,"* or *"send this to NotebookLM."* Scriptorium uploads the entire corpus — synthesis, contradictions, evidence, every PDF — into a fresh NotebookLM notebook and triggers Studio artifact generation. Each artifact cites the actual papers.
+
+| Artifact | What it's for |
+|---|---|
+| **Audio Overview (podcast)** | Host-style conversation walking through the literature. The commute-listen artifact. |
+| **Video Overview** | Narrated visual walkthrough with on-screen highlights. |
+| **Slide deck** | Committee-presentable summary, drops into Keynote or Google Slides. |
+| **Mind map** | Visual concept layout showing how the papers cluster around themes. |
+| **Briefing Doc** | Executive summary of the review. |
+| **Study Guide** | Q&A learning aid — for getting fluent with literature you didn't grow up in. |
+| **FAQ** | The questions a reviewer would ask, answered from the corpus. |
+| **Timeline** | Chronological view of how the literature evolved. |
+| **Quiz** | Practice questions with answers — prelim and qualifier prep. |
+| **Chat with the corpus** | Ask any question; every answer cites source PDFs. |
+
+The first five fire automatically through the NotebookLM MCP from inside Cowork. The rest live one click away in the NotebookLM web UI on the same notebook — no re-upload.
+
+> **Privacy gate.** Publishing is the one operation in Scriptorium that intentionally moves your corpus off the connectors you chose. You see an explicit confirmation before any file leaves; the full source manifest — every file uploaded, the notebook ID, every artifact ID — gets logged to your audit trail. If you don't have a NotebookLM connector, Scriptorium walks you through the manual upload path (same notebook, five extra clicks).
+
+---
+
+## Why Scriptorium (and not just Elicit / Consensus / ResearchRabbit)
+
+Scriptorium isn't a search engine. It's a workflow. Elicit answers questions. Consensus surfaces claims. ResearchRabbit maps citation networks. Scite checks whether a paper is supported or contradicted. **Scriptorium takes what those tools produce and turns it into a defensible chapter with an audit trail — and then a podcast.** Use it alongside them, not instead of them.
+
+| | Scriptorium | Elicit | Consensus | ResearchRabbit | Scite |
+|---|---|---|---|---|---|
+| Primary job | Workflow + audit | Question answering | Claim search | Citation graph | Claim check |
+| Locator-cited extraction | ✅ | Partial | ❌ | ❌ | ❌ |
+| PRISMA audit log | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Names disagreement | ✅ | ❌ | Partial | ❌ | ✅ |
+| Output is a draft | ✅ (`synthesis`) | Summary | Answer card | Graph | Badges |
+| Studio artifacts (podcast/deck/etc.) | ✅ via NotebookLM | ❌ | ❌ | ❌ | ❌ |
+| Your corpus stays under your control | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+If your review needs to **cite its sources, survive committee scrutiny, and become a podcast**, Scriptorium is the layer that ties the other tools' output together.
+
+---
+
+## The three disciplines
+
+Three rules, enforced by skill prose:
+
+1. **Evidence-first claims.** Every sentence in synthesis cites `[paper_id:locator]` or it gets stripped. There is no rhetorical-but-uncited writing.
+2. **PRISMA audit trail.** Every search, screen, extraction, and reasoning decision appends one row to the audit log. Append-only. Reconstructable end-to-end.
+3. **Contradiction surfacing.** When evidence disagrees on the same concept, named camps — not "some researchers find X while others find Y."
+
+---
 
 ## Install
 
-Three paths, in order of friction:
+Three paths, ranked by friction:
 
-**A. Drag the `.plugin` file into a Cowork chat.** Simplest of all. Cowork renders the file as a rich preview with an Accept button — one click and it's installed. Get the file from the [Releases page](https://github.com/Jerrymwolf/Scriptorium-Cowork/releases) or from anyone who's already running it.
+**A. Drag the `.plugin` file into a Cowork chat.** Simplest of all. Cowork renders the file as a rich preview with an Accept button — one click and it's installed. Get the file from the [Releases page](https://github.com/Jerrymwolf/Scriptorium-Cowork/releases) or from anyone running it.
 
-**B. Settings → Plugins → Upload.** Same `.plugin` file, but go through the admin UI. Useful when the chat-attach preview misbehaves (known bug on Cowork for Windows).
+**B. Settings → Plugins → Upload.** Same `.plugin` file, through the admin UI. Useful when the chat-attach preview misbehaves (known bug on Cowork for Windows).
 
-**C. Marketplace add (Claude Code style).**
+**C. Marketplace add.**
 
 ```
 /plugin marketplace add Jerrymwolf/Scriptorium-Cowork
@@ -45,92 +112,85 @@ Three paths, in order of friction:
 
 After install, open any Cowork chat and say *"set up Scriptorium."*
 
-## Connectors
+---
 
-Scriptorium for Cowork is **connector-agnostic** — it doesn't ship its own scholarly-search MCP. Instead, it uses whatever you've connected, falling back gracefully when something is missing. See [`CONNECTORS.md`](./CONNECTORS.md) for the full category map.
+## Connect at least one of each
 
-Recommended:
+Scriptorium for Cowork is **connector-agnostic** — it doesn't ship its own scholarly-search MCP. It uses whatever you've connected, falling back gracefully when something is missing. Full category map in [`CONNECTORS.md`](./CONNECTORS.md).
 
-- **Scholarly search:** Consensus (claim-first), Scholar Gateway (breadth), or PubMed (biomed). At least one is required for non-degraded search.
-- **State home:** NotebookLM (best — native PDF sources + Studio publishing), Google Drive / Box / OneDrive (folder-based), or Notion (page-tree). Without one, your review is session-only and won't persist past the conversation.
-- **Publishing destination:** NotebookLM, if you want podcast / slide deck / mind map / video output.
+| Category | What it does | Examples |
+|---|---|---|
+| Scholarly search | Required for non-degraded search | Consensus (claim-first), Scholar Gateway (breadth), PubMed (biomed) |
+| State home | Where the review lives | NotebookLM (best — native PDFs + Studio), Drive/Box/OneDrive (folder), Notion (page tree) |
+| Publishing destination | Studio artifact generation | NotebookLM |
 
-If nothing is connected, the plugin runs in degraded mode (WebFetch against OpenAlex's public API) and tells you so.
+If nothing is connected, Scriptorium runs in degraded mode (WebFetch against OpenAlex's public API) and tells you so.
 
-## Use
+---
 
-In any Cowork chat, say:
+## What a session feels like
+
+In any Cowork chat:
 
 > Run a lit review on caffeine and working memory in healthy adults.
 
-Scriptorium fires `using-scriptorium` first to probe your connectors, then `lit-scoping` to ask 3–5 clarifying questions, then walks you through search → screen → extract → synthesize → contradiction-check → audit. The whole pipeline typically takes 8–15 minutes for a well-scoped question and produces:
+Scriptorium probes which connectors you have, asks 3–5 clarifying questions about scope (purpose, fields, year range, target corpus size), then runs **search → screen → extract → synthesize → contradiction-check → audit**. Twelve minutes later it reports back:
 
-- `corpus` — every paper found, deduped, with `kept`/`dropped` status
-- `evidence` — locator-cited claims (one row per claim)
-- `synthesis` — every sentence cite-grounded
-- `contradictions` — named-camp disagreements
-- `audit-jsonl` — every action, timestamped, status-tagged
+```
+Corpus:        137 returned, 92 deduped, 41 kept after screening
+Full-text:     28/41 (68%)
+Evidence rows: 86
+Cite-check:    0 unsupported sentences
+Contradictions: 3 concepts with positive/negative pairs
 
-These artifacts live in whichever state home you picked at the start. Export them whenever you want, or feed them into NotebookLM for the full publishing menu below.
+Outputs: synthesis, contradictions, audit-jsonl, references
+```
 
-## Publish to NotebookLM
+Then: *"Want a podcast, deck, mind map, or video of this review, or are we done?"*
 
-When the review passes its cite-check, `lit-publishing` uploads the entire corpus — `synthesis`, `contradictions`, `evidence`, plus every PDF you ingested — into a fresh NotebookLM notebook and triggers Studio artifact generation. Say *"publish this as a podcast"*, *"make a deck for committee"*, or *"send this to NotebookLM"* and it fires.
+---
 
-**What you can generate from a finished review:**
+## Three patterns that work
 
-| Artifact | What it's good for |
-|---|---|
-| **Audio Overview (podcast)** | Host-style conversation walking through the literature. Listen on the commute the morning of your meeting. |
-| **Video Overview** | Narrated visual walkthrough with on-screen highlights. |
-| **Slide deck** | Committee-presentable summary, ready to drop into Keynote or Google Slides. |
-| **Mind map / infographic** | Visual concept layout showing how the papers cluster around themes. |
-| **Briefing Doc** | Executive summary of the review, generated in NotebookLM Studio. |
-| **Study Guide** | Q&A learning aid — useful for getting fluent with a literature you didn't grow up in. |
-| **FAQ** | The questions a reviewer would ask, answered from the corpus. |
-| **Timeline** | Chronological view of how the literature evolved. |
-| **Quiz** | Practice questions with answers — prelim / qualifier prep. |
-| **Chat with the corpus** | Once the notebook exists, ask any question; every answer cites the source PDFs. |
+**Get smart fast on an unfamiliar topic.** Tonight: scope a review. Twelve minutes later: defensible synthesis. Morning: ask for the audio overview. Commute: listen. You walk into the meeting with the literature in your head.
 
-The first four are triggered automatically through the NotebookLM MCP. The rest are reachable inside the NotebookLM web UI from the same notebook — no re-upload needed.
+**Stack reviews into meta-synthesis.** Run three targeted reviews (*caffeine and attention*, *caffeine and working memory*, *caffeine and executive function*). Publish all three corpora into one NotebookLM notebook. Ask the combined corpus questions you couldn't ask any single review.
 
-**Privacy gate.** Publishing is the one operation in Scriptorium that intentionally moves your corpus off your connected stores. Before any file leaves, you see an explicit privacy prompt and confirm. The full source manifest — every file uploaded, the notebook ID, every artifact ID — gets logged to your audit trail.
+**Hand a draft and a tape to your committee.** Synthesis as a markdown chapter, audit trail as proof of method, audio overview as a 12-minute "here's what the literature says" briefing your committee can listen to before the defense.
 
-If `~~notebook publish` isn't connected, `lit-publishing` walks you through the manual upload path. Same notebook, five extra clicks.
-
-## The three disciplines
-
-These are non-negotiable, enforced by skill prose:
-
-1. **Evidence-first claims.** Every sentence in synthesis cites `[paper_id:locator]` or it doesn't ship.
-2. **PRISMA audit trail.** Every decision is logged, append-only, status-tagged.
-3. **Contradiction surfacing.** Named camps, not bland consensus.
-
-A discipline preamble is loaded into every session via `skills/using-scriptorium/INJECTION.md`.
+---
 
 ## Trigger phrases
 
-| If you say… | This skill fires |
+Cowork dispatches via natural language. Common ones:
+
+| If you say… | This fires |
 |---|---|
-| "set up Scriptorium" / first-run | `setting-up-scriptorium` |
-| "run a lit review on X" | `running-lit-review` (full pipeline) |
-| "scope a review on X" | `lit-scoping` |
-| "find papers on X" | `lit-searching` |
-| "screen these papers" / "apply criteria" | `lit-screening` |
-| "extract findings from these PDFs" | `lit-extracting` |
-| "draft the synthesis" | `lit-synthesizing` |
-| "where do papers disagree?" | `lit-contradiction-check` |
-| "show the audit trail" / "PRISMA flow" | `lit-audit-trail` |
-| "publish this to NotebookLM" / "make a podcast" / "make a deck" / "make a video" / "make a quiz" | `lit-publishing` |
+| *"set up Scriptorium"* | first-run setup |
+| *"run a lit review on X"* | full pipeline |
+| *"find papers on X"* | search only |
+| *"screen these papers"* | screening |
+| *"draft the synthesis"* | synthesis (with cite-check) |
+| *"where do papers disagree?"* | contradiction check |
+| *"show the audit trail"* / *"PRISMA flow"* | audit summary |
+| *"publish this as a podcast"* / *"send to NotebookLM"* | publishing |
+
+Phrasing doesn't have to match exactly — anything close to these triggers the right skill.
+
+---
 
 ## Privacy
 
-By default, your corpus stays inside the connectors you chose. The one operation that intentionally moves it elsewhere is `lit-publishing`, which uploads to NotebookLM (Google). That operation always shows a privacy note before proceeding and logs every uploaded file to `audit-jsonl`.
+By default your corpus stays inside the connectors you chose. The single operation that moves it elsewhere is `lit-publishing`, which uploads to NotebookLM (Google). That operation always shows a privacy note before proceeding and logs every uploaded file to the audit trail. MIT-licensed, no telemetry, no phone-home.
 
-## License
+---
+
+## License & credits
 
 MIT. See [LICENSE](./LICENSE).
 
-## Credits
+Architected in the style of [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent — self-contained skill folders Claude loads on demand. The pattern is *Superpowers*; the application to literature review is *Scriptorium*. Sister project for Claude Code: [Jerrymwolf/Scriptorium](https://github.com/Jerrymwolf/Scriptorium).
 
-Scriptorium is architected in the style of [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent — self-contained skill folders that Claude loads on demand. The pattern is *Superpowers*; the application to literature review is *Scriptorium*.
+---
+
+**Try it:** drop the [`.plugin` file from the latest release](https://github.com/Jerrymwolf/Scriptorium-Cowork/releases/latest) into your Cowork chat, click Accept, and say *"run a lit review on a topic you've been meaning to read up on."* At v0.1.0, real feedback is the highest-leverage thing you can give — [file an issue](https://github.com/Jerrymwolf/Scriptorium-Cowork/issues) or DM with what worked or broke.

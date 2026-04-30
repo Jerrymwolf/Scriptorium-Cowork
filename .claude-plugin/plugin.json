@@ -1,6 +1,6 @@
 {
   "name": "scriptorium-cowork",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Evidence-first, PRISMA-audited literature review for Claude Cowork. Every claim locator-cited, every search and screening decision logged, contradictions named instead of averaged. Connector-agnostic — works with whatever scholarly search and document store you've connected.",
   "author": {
     "name": "Jeremiah Wolf",
