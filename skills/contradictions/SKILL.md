@@ -1,5 +1,5 @@
 ---
-name: lit-contradiction-check
+name: contradictions
 description: Use when the user asks where papers disagree, wants to surface contradictions, or is preparing a "limits of the evidence" section. Groups evidence by concept, then runs a two-stage same-question check before deciding whether direction-mismatch is theoretical conflict or scope variation. Reports three buckets — same-question disagreements, scope-variation findings, and uncertain cases for human review.
 ---
 
@@ -52,4 +52,4 @@ Append one entry per concept with at least one candidate pair: `{phase: "contrad
 
 ## Hand-off
 
-Insert rendered sections into `synthesis` under up to three separate headings: *"Where authors disagree on the same question"* (same-question), *"Where findings vary across populations / timeframes / operationalizations"* (different-questions), *"Disagreements I couldn't classify"* (uncertain). **Skip any heading whose bucket is empty** — never insert an empty section. If all three buckets are empty (no candidate pairs at all), insert a single one-liner under *"Notes on disagreement"*: *"No direction-mismatch pairs found across N concepts in the evidence."* Re-run `lit-synthesizing` Step 5 (cite-check) on the updated draft — the cite-check is mandatory after any synthesis edit.
+Insert rendered sections into `synthesis` under up to three separate headings: *"Where authors disagree on the same question"* (same-question), *"Where findings vary across populations / timeframes / operationalizations"* (different-questions), *"Disagreements I couldn't classify"* (uncertain). **Skip any heading whose bucket is empty** — never insert an empty section. If all three buckets are empty (no candidate pairs at all), insert a single one-liner under *"Notes on disagreement"*: *"No direction-mismatch pairs found across N concepts in the evidence."* Re-run `synthesize` Step 5 (cite-check) on the updated draft — the cite-check is mandatory after any synthesis edit.

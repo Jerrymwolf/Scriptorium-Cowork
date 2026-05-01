@@ -1,6 +1,6 @@
 ---
-name: lit-screening
-description: Use after lit-searching when the user wants to apply inclusion/exclusion criteria (year range, language, must-include/exclude keywords) to the corpus. Marks papers kept or dropped with a reason and records the decision in the audit trail.
+name: screen
+description: Use after search when the user wants to apply inclusion/exclusion criteria (year range, language, must-include/exclude keywords) to the corpus. Marks papers kept or dropped with a reason and records the decision in the audit trail.
 ---
 
 # Literature Screening (Cowork)
@@ -41,4 +41,4 @@ Screening is reversible — set a row's `status` back to `candidate` and clear `
 
 ## Hand-off
 
-After reporting kept/dropped counts, ask: "Proceed to full-text extraction on the N kept papers?" Hand off to `lit-extracting`.
+After reporting kept/dropped counts, ask: "Proceed to full-text extraction on the N kept papers?" Hand off to `extract`.

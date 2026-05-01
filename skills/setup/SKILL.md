@@ -1,5 +1,5 @@
 ---
-name: setting-up-scriptorium
+name: setup
 description: Use on first run, when the user asks "set up Scriptorium", "what does this plugin do", or "configure Scriptorium". Walks the user through a 60-second onboarding — connector check, state-home selection, basic preferences — without requiring any CLI install.
 ---
 
@@ -84,7 +84,7 @@ The user asks their Cowork admin to add these hosts, or — for personal account
 
 Close with: *"Setup is complete. To start your first review, tell me the research question — for example, 'I want to do a lit review on caffeine and working memory in healthy adults.'"*
 
-Do not auto-fire `lit-scoping` here. Let the user initiate the next turn so they have a clean entry point.
+Do not auto-fire `scope` here. Let the user initiate the next turn so they have a clean entry point.
 
 ## What this skill does NOT do
 
@@ -92,4 +92,4 @@ Do not auto-fire `lit-scoping` here. Let the user initiate the next turn so they
 - Does not write to the filesystem (Cowork has none).
 - Does not validate any account credentials — it just records what the user said.
 - Does not authenticate to the user's library proxy. Library access happens through the user's browser; the agent only generates the proxied URL.
-- Does not pre-fetch any papers. Search starts in `lit-searching`, not here.
+- Does not pre-fetch any papers. Search starts in `search`, not here.

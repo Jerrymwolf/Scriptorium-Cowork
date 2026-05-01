@@ -1,5 +1,5 @@
 ---
-name: lit-audit-trail
+name: audit
 description: Use when the user asks for the audit trail, PRISMA flow, or a record of what happened during the review. Reads the append-only audit log from the state adapter and renders it as a PRISMA-flavored summary.
 ---
 
@@ -15,7 +15,7 @@ The audit log is the single source of truth for reconstructing what happened. Ev
 - `extraction` — every full-text resolution, with the cascade source that won and `n_evidence_rows`
 - `synthesis` — verify runs, with unsupported/missing counts and mode
 - `contradiction-check` — concept-level pair counts
-- `publishing` — NotebookLM Studio artifact generations (from `lit-publishing`)
+- `publishing` — NotebookLM Studio artifact generations (from `publish`)
 
 ## Workflow
 

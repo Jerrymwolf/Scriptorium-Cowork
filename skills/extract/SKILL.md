@@ -1,5 +1,5 @@
 ---
-name: lit-extracting
+name: extract
 description: Use when the user asks to pull full text of kept papers, extract methods/findings, or populate evidence from PDFs. Runs the Cowork-appropriate full-text cascade and writes locator-cited evidence rows.
 ---
 
@@ -16,7 +16,7 @@ Earlier sources always win. Abstract-only is a valid terminal state — never an
 | Step | How (Cowork) | Notes |
 |---|---|---|
 | `user_pdf` | If state home is NotebookLM, add via `~~notebook publish` `source_add(source_type="file")`. Otherwise read inline or save to `pdfs/`. | Top priority. User-supplied PDFs always win the cascade. |
-| `unpaywall` | `WebFetch GET https://api.unpaywall.org/v2/{doi}?email={unpaywall_email}` → JSON; if `best_oa_location.url_for_pdf` is non-null, fetch that URL via `WebFetch`. | Free OA copies, ~50% recall on recent papers. Requires `unpaywall_email` from setting-up-scriptorium and `api.unpaywall.org` on the user's Cowork allowlist. |
+| `unpaywall` | `WebFetch GET https://api.unpaywall.org/v2/{doi}?email={unpaywall_email}` → JSON; if `best_oa_location.url_for_pdf` is non-null, fetch that URL via `WebFetch`. | Free OA copies, ~50% recall on recent papers. Requires `unpaywall_email` from setup and `api.unpaywall.org` on the user's Cowork allowlist. |
 | `arxiv` | `WebFetch GET http://export.arxiv.org/api/query?search_query=ti:"{title}"+AND+au:"{author}"&max_results=3` → Atom XML; parse for `<link rel="alternate" type="application/pdf">`. | Preprints. Requires `export.arxiv.org` on the allowlist. |
 | `pmc` | If `~~biomed search` is connected and the corpus row has a PMCID, call `~~biomed search` `get_full_text_article(pmcid=…)`. | NIH OA full text — biomedical papers only. |
 | `library_proxy` | If `library_proxy_base` is set in `scriptorium-config`, generate the proxied URL: `{library_proxy_base}{quoted(paper.doi_url)}`. Hand the URL to the user with: *"I couldn't pull this through OA channels. Click this proxied URL to fetch through your library, then drag the PDF back here when downloaded."* Wait for upload before continuing on this paper. | Cowork's `WebFetch` cannot authenticate as the user to their library — only their browser can. This is a manual handoff, not a silent fetch. |
@@ -80,11 +80,11 @@ The synthesis layer reads these when verifying `[paper_id:locator]` tokens. Inve
 ## Direction + concept
 
 - `direction`: `positive` (evidence supports the concept), `negative` (contradicts), `mixed` (both directions in same paper), `neutral` (relevant but not directional).
-- `concept`: a short slug (`caffeine_wm_accuracy`, not "caffeine's effect on working memory accuracy in adults"). Downstream, `lit-contradiction-check` groups by concept.
+- `concept`: a short slug (`caffeine_wm_accuracy`, not "caffeine's effect on working memory accuracy in adults"). Downstream, `contradictions` groups by concept.
 
 ## Optional Scite enrichment
 
-If `~~citation context` (Scite) resolved during the connector probe, after writing each evidence row, optionally call `~~citation context` for the paper's DOI or claim and capture Scite's classification (`supporting` / `contrasting` / `mentioning`) into the row's `scite_classification` field. This is enrichment — it does not replace the human-readable `direction` field, which is read directly from the source. Scite's classification is most useful in `lit-contradiction-check`.
+If `~~citation context` (Scite) resolved during the connector probe, after writing each evidence row, optionally call `~~citation context` for the paper's DOI or claim and capture Scite's classification (`supporting` / `contrasting` / `mentioning`) into the row's `scite_classification` field. This is enrichment — it does not replace the human-readable `direction` field, which is read directly from the source. Scite's classification is most useful in `contradictions`.
 
 ## NotebookLM-specific note
 
@@ -97,4 +97,4 @@ Default to per-paper isolation unless the user is quota-pressed. Record the choi
 
 ## Hand-off
 
-After every kept paper is extracted (or terminally marked abstract_only), report "N papers extracted, M evidence rows written, K papers fell through to abstract-only" and hand off to `lit-synthesizing`.
+After every kept paper is extracted (or terminally marked abstract_only), report "N papers extracted, M evidence rows written, K papers fell through to abstract-only" and hand off to `synthesize`.

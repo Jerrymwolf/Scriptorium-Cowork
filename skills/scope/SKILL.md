@@ -1,6 +1,6 @@
 ---
-name: lit-scoping
-description: Use when the user asks to scope, frame, or plan a literature review before searching begins, OR when invoked by running-lit-review, OR when lit-searching finds no scope object. Produces a user-approved scope object that drives every downstream phase. Adaptive — vague prompts get many questions, precise prompts skip straight to a recap.
+name: scope
+description: Use when the user asks to scope, frame, or plan a literature review before searching begins, OR when invoked by review, OR when search finds no scope object. Produces a user-approved scope object that drives every downstream phase. Adaptive — vague prompts get many questions, precise prompts skip straight to a recap.
 ---
 
 # Literature Scoping (Cowork)
@@ -17,10 +17,10 @@ The goal of this skill is a single artifact: a **user-approved scope object** th
 
 ## Step 0 — Grill-me handoff state check
 
-If `running-lit-review` fired one of the grill-me skills before invoking this one, handoff state is in conversation context:
+If `review` fired one of the grill-me skills before invoking this one, handoff state is in conversation context:
 
-- From `research-grill-me`: `{purpose, audience, artifact, depth, tradition?, topic}`
-- From `research-questions-grill-me`: `{research_question, sub_questions, tradition, boundaries}`
+- From `grill-me`: `{purpose, audience, artifact, depth, tradition?, topic}`
+- From `grill-question`: `{research_question, sub_questions, tradition, boundaries}`
 
 Treat any present field as **resolved** in the inference pass (Step 2). Skip Tier 1+2 questions that already have answers. Go directly to Step 5 (recap and approval) with a one-line acknowledgment: *"You've already worked through purpose and question with the grill-me skill — let me confirm the scope and we'll search."*
 
@@ -131,7 +131,7 @@ If 3 revision cycles pass without approval, proactively offer "Want to start ove
 1. Build the scope object: `{scope_version: 1, research_question, purpose, fields, population, methodology, year_range, corpus_target, publication_types, depth, tier3, soft_warnings, anchor_papers, approved_at}`.
 2. Write it to the state home via the adapter. If state home is session-only, hold it in conversation memory and warn the user: "Scope will not persist beyond this session — export before closing."
 3. Append one audit entry: `{phase: "scoping", action: "scope_approved", details: {dimensions_resolved_via_inference: [...], dimensions_resolved_via_question: [...], tier3_dimensions_selected: [...], soft_warnings_acknowledged: [...], revision_cycles: <n>}, status: "success"}`.
-4. Tell the user: "Scope approved and saved. Handing off to `lit-searching`."
+4. Tell the user: "Scope approved and saved. Handing off to `search`."
 
 ## Performance targets
 

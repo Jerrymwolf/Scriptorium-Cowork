@@ -14,17 +14,17 @@ No CLI. No local shell. No hooks. Pure skills + the MCPs you've already connecte
 
 **Most users should start by getting grilled.** Three openings, in order of how confident you are about what you want:
 
-1. **`"Grill me on this topic"`** — *Recommended starting point.* Fires `research-grill-me`, a Pocock-style three-to-five-turn interview that surfaces purpose, audience, artifact, and depth, then routes you to the right tool. You might end up at a podcast, a paper, a strategy memo, a teaching module, or just clearer thinking. If you're not sure what you want from a topic, this is the door.
-2. **`"I have a topic but no question yet — grill me"`** — Use when you know you're writing a research-paper-shaped artifact (paper, chapter, dissertation, EdD/DBA capstone) but the research question isn't pinned down. Fires `research-questions-grill-me`. Detects practitioner-doctorate context (EdD/DBA/Penn CLO) and surfaces the practitioner-researcher position rather than treating it as bias.
+1. **`"Grill me on this topic"`** — *Recommended starting point.* Fires `grill-me`, a Pocock-style three-to-five-turn interview that surfaces purpose, audience, artifact, and depth, then routes you to the right tool. You might end up at a podcast, a paper, a strategy memo, a teaching module, or just clearer thinking. If you're not sure what you want from a topic, this is the door.
+2. **`"I have a topic but no question yet — grill me"`** — Use when you know you're writing a research-paper-shaped artifact (paper, chapter, dissertation, EdD/DBA capstone) but the research question isn't pinned down. Fires `grill-question`. Detects practitioner-doctorate context (EdD/DBA/Penn CLO) and surfaces the practitioner-researcher position rather than treating it as bias.
 3. **`"Run a lit review on X"`** — Use when you already have a clear research question and just need the literature. Fires the full pipeline; twelve minutes later you have a defensible synthesis with audit trail. Asks one question first (*"do you have a clear research question, or want to grill out your direction first?"*) so it can route you upward to the grill-me skills if it turns out you're not as ready as you thought.
 
-If you're not sure which to pick, just say *"grill me on this topic."* The skills auto-redirect — if you start in `research-grill-me` but actually need `research-questions-grill-me`, it forwards you in turn one. Same the other direction.
+If you're not sure which to pick, just say *"grill me on this topic."* The skills auto-redirect — if you start in `grill-me` but actually need `grill-question`, it forwards you in turn one. Same the other direction.
 
-A short transcript with `research-grill-me`:
+A short transcript with `grill-me`:
 
-> **You:** I want to read up on caffeine and working memory.
+> **You:** I'm thinking about caffeine and working memory but I'm not sure what I want from it yet.
 >
-> **Scriptorium:** Most people who start there are aiming at one of three things: getting up to speed for a meeting (commute podcast or briefing doc), writing something committee-readable (paper or chapter), or just personal curiosity. Which fits?
+> **Scriptorium:** I see you're interested in caffeine and working memory. Let me help you figure out what you want to do with it. Most people who start with a topic like this are aiming at one of three things: getting up to speed for a meeting (commute podcast or briefing doc), writing something committee-readable (paper or chapter), or just personal curiosity. Which fits?
 >
 > **You:** Honestly the first one — I have a meeting Thursday.
 >
@@ -34,7 +34,7 @@ A short transcript with `research-grill-me`:
 >
 > **Scriptorium:** That's enough to start. Routing you to a focused lit review with a NotebookLM podcast as the deliverable. Want me to run it?
 
-Three turns, one decision per turn, ends with a concrete next action. Same shape for `research-questions-grill-me`, but the questions narrow toward phenomenon-of-interest, tradition, and operationalization rather than artifact and audience.
+Three turns, one decision per turn, ends with a concrete next action. Same shape for `grill-question`, but the questions narrow toward phenomenon-of-interest, tradition, and operationalization rather than artifact and audience.
 
 ---
 
@@ -168,7 +168,7 @@ In any Cowork chat:
 
 > I'm working on a chapter about how organizational leaders maintain trust during remote work, but I haven't pinned down the research question yet. Grill me on this.
 
-Scriptorium fires `research-grill-me` first. Three to five turns surface that you're heading toward a dissertation chapter, the audience is your committee, the depth is "mastery," and the tradition leans qualitative. The skill notices you're past the topic-only stage and routes you into `research-questions-grill-me` to pin the actual question. A few more turns produce something defensible — say, *"How do remote-work managers in mid-sized SaaS companies sustain interpersonal trust across distributed teams over the first 90 days of onboarding?"* — with sub-questions and named boundaries.
+Scriptorium fires `grill-me` first. Three to five turns surface that you're heading toward a dissertation chapter, the audience is your committee, the depth is "mastery," and the tradition leans qualitative. The skill notices you're past the topic-only stage and routes you into `grill-question` to pin the actual question. A few more turns produce something defensible — say, *"How do remote-work managers in mid-sized SaaS companies sustain interpersonal trust across distributed teams over the first 90 days of onboarding?"* — with sub-questions and named boundaries.
 
 Then the lit review runs: connector probe, scope confirmation, search → screen → extract → synthesize → contradiction-check → audit. Twelve minutes later it reports back:
 
@@ -191,7 +191,7 @@ Then: *"Want a podcast, deck, mind map, or video of this review, or are we done?
 
 **1. Idea → question → chapter — the canonical doctoral workflow.** You're working on a dissertation chapter or capstone but the research question isn't yet pinned down. Say *"grill me on this topic"*. Three turns surface what you actually want from the work. Two more turns generate a defensible question with sub-questions, boundaries, and tradition. The lit review then fires and produces a synthesis chapter, locator-cited, with a PRISMA audit trail. The output is a chapter draft you'd defend. This is what Scriptorium is built for first.
 
-**2. Get unstuck on a vague research interest.** You have a topic that's been nagging you but you can't articulate the question. Say *"grill me on this topic"* and let `research-grill-me` push you through the purpose / audience / artifact decisions you've been avoiding. Sometimes the answer is *"this is a strategy memo, not a paper."* Sometimes it's *"this is a real research question — let me grill it out."* Either way you exit knowing what you're doing and why.
+**2. Get unstuck on a vague research interest.** You have a topic that's been nagging you but you can't articulate the question. Say *"grill me on this topic"* and let `grill-me` push you through the purpose / audience / artifact decisions you've been avoiding. Sometimes the answer is *"this is a strategy memo, not a paper."* Sometimes it's *"this is a real research question — let me grill it out."* Either way you exit knowing what you're doing and why.
 
 **3. Hand a draft and a tape to your committee.** Synthesis as a markdown chapter, audit trail as proof of method, audio overview as a 12-minute *"here's what the literature says"* briefing your committee can listen to before the defense. Three artifacts that answer three different committee questions: *"What does the literature say?"*, *"How did you search?"*, *"Can you give me the gist on the way to my office hours?"*.
 
@@ -206,8 +206,8 @@ Cowork dispatches via natural language. Common ones:
 | If you say… | This fires |
 |---|---|
 | *"set up Scriptorium"* | first-run setup |
-| *"grill me on this topic"* / *"I have a topic but don't know what I want from it"* | `research-grill-me` — direction interview (recommended starting point) |
-| *"grill me on the question"* / *"I need a research question for this paper"* | `research-questions-grill-me` — RQ interview |
+| *"I have a topic but don't know what I want from it"* / *"help me figure out what to do with this idea"* / `/grill [topic]` | `grill-me` — direction interview (recommended starting point) |
+| *"I need a research question for this paper"* / *"grill me on the question"* | `grill-question` — RQ interview |
 | *"run a lit review on X"* | full pipeline (asks if you want to be grilled first) |
 | *"scope this review"* / *"help me plan a review on X"* | scoping only |
 | *"find papers on X"* | search only |
@@ -223,7 +223,7 @@ Phrasing doesn't have to match exactly — anything close to these triggers the 
 
 ## Privacy
 
-By default your corpus stays inside the connectors you chose. The single operation that moves it elsewhere is `lit-publishing`, which uploads to NotebookLM (Google). That operation always shows a privacy note before proceeding and logs every uploaded file to the audit trail. MIT-licensed, no telemetry, no phone-home.
+By default your corpus stays inside the connectors you chose. The single operation that moves it elsewhere is `publish`, which uploads to NotebookLM (Google). That operation always shows a privacy note before proceeding and logs every uploaded file to the audit trail. MIT-licensed, no telemetry, no phone-home.
 
 ---
 

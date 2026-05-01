@@ -1,5 +1,5 @@
 ---
-name: lit-searching
+name: search
 description: Use when the user asks to find/search/discover papers on a topic, wants candidate sources, or is populating/extending the corpus. Reads the approved scope, runs queries against whichever scholarly-search MCPs are connected, dedupes the results, and writes them to the corpus via the state adapter.
 ---
 
@@ -7,7 +7,7 @@ description: Use when the user asks to find/search/discover papers on a topic, w
 
 ## Precondition — scope is required
 
-Read the `scope` artifact from the state home (note `scope`, file `scope.json`, or page `Scope`). If it does not exist, STOP and invoke `lit-scoping` first. Do not ask the user for query, year range, or criteria yourself — those values come from the scope artifact.
+Read the `scope` artifact from the state home (note `scope`, file `scope.json`, or page `Scope`). If it does not exist, STOP and invoke `scope` first. Do not ask the user for query, year range, or criteria yourself — those values come from the scope artifact.
 
 Fields consumed:
 
@@ -54,7 +54,7 @@ Corpus-building turns are tool-to-tool: read the search result, write to the sta
 5. Dedupe in-memory by DOI → `(source, paper_id)` → normalized title. The strongest key is DOI; if two rows share a DOI, keep the one with the richer record (non-empty abstract, venue, authors). Last-resort fallback for normalized title: `re.sub(r"[^a-z0-9]+", " ", title.lower()).strip()`.
 6. Write the deduped corpus to the `corpus` artifact via the state adapter. Format depends on state home — see the mapping in `using-scriptorium`.
 7. Append one audit entry per source query: `{phase: "search", action: "<source>.query", details: {query, n_results, n_after_dedupe}, status}`.
-8. Tell the user the count and top 5 titles. Hand off to `lit-screening` when they're ready.
+8. Tell the user the count and top 5 titles. Hand off to `screen` when they're ready.
 
 ## When to stop searching
 
@@ -62,4 +62,4 @@ Stop when (a) the user is satisfied with the count, or (b) the last 20 new resul
 
 ## Hand-off
 
-Report `{n_returned, n_deduped, n_kept_for_screening}`. Hand off to `lit-screening`.
+Report `{n_returned, n_deduped, n_kept_for_screening}`. Hand off to `screen`.

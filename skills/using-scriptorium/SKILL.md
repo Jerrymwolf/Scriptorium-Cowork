@@ -1,6 +1,6 @@
 ---
 name: using-scriptorium
-description: Use when the user mentions a literature review, asks to find/screen/synthesize/draft research, or starts a Scriptorium session. Probes which Cowork connectors are available, picks the state home, teaches the three disciplines, and dispatches to the phase-appropriate lit-* skill.
+description: Use when the user mentions a literature review, asks to find/screen/synthesize/draft research, or starts a Scriptorium session. Probes which Cowork connectors are available, picks the state home, teaches the three disciplines, and dispatches to the phase-appropriate skill (scope / search / screen / extract / synthesize / contradictions / audit / publish, or the grill-me skills upstream).
 ---
 
 # Using Scriptorium (Cowork)
@@ -57,7 +57,7 @@ Search backend selection rule:
 - If `~~claim search` resolved → prefer it for claim-framed questions.
 - If `~~biomed search` resolved AND the topic is biomedical → use it for primary recall.
 - If `~~breadth search` resolved → use it as the breadth pass alongside one of the above.
-- If `~~citation context` resolved → reserve it for `lit-contradiction-check` and as evidence enrichment in `lit-extracting`. Do not use it as a primary search source.
+- If `~~citation context` resolved → reserve it for `contradictions` and as evidence enrichment in `extract`. Do not use it as a primary search source.
 - If none of the search categories resolved → **degraded mode**. Use `WebFetch` against `https://api.openalex.org/works?search=...` and announce "Search is running in degraded mode — no scholarly-search MCP detected. Connect Consensus, Scholar Gateway, PubMed, or Scite for better recall."
 
 State home selection rule:
@@ -80,7 +80,7 @@ Manual overrides persist for the session and are written to the audit trail as a
 
 ## Persisted state-home preference
 
-`state_home` may be set in `scriptorium-config` from a prior session (set by `setting-up-scriptorium`). On subsequent runs, if the persisted value matches a category that resolved during this session's probe, prefer it over the cascade default. If the persisted value points at a category that did NOT resolve (e.g., user wrote `notebooklm` but no NotebookLM tool is available this session), fall back to the cascade and tell the user: "Your saved state home (NotebookLM) isn't available this session — falling back to <next available>."
+`state_home` may be set in `scriptorium-config` from a prior session (set by `setup`). On subsequent runs, if the persisted value matches a category that resolved during this session's probe, prefer it over the cascade default. If the persisted value points at a category that did NOT resolve (e.g., user wrote `notebooklm` but no NotebookLM tool is available this session), fall back to the cascade and tell the user: "Your saved state home (NotebookLM) isn't available this session — falling back to <next available>."
 
 ## State-adapter mapping
 
@@ -102,28 +102,28 @@ Every downstream skill reads/writes through this mapping. Skills never hardcode 
 Both runtimes agree on these. Skills never invent variants.
 
 - **Paper:** `{paper_id, source, title, authors[], year, doi, abstract, venue, open_access_url, metadata_resolution: "verified" | "partial" | "inferred"}`
-  - `metadata_resolution` is set by `lit-searching` when the paper enters the corpus. `verified` = DOI/PMID resolves to a real publisher record OR title+authors+year exact-matches a single OpenAlex/Semantic Scholar record. `partial` = at least one of those resolves but other fields are gap-filled from a related record. `inferred` = any of `{title, authors, year, doi}` was constructed from prose context rather than a verified API response.
+  - `metadata_resolution` is set by `search` when the paper enters the corpus. `verified` = DOI/PMID resolves to a real publisher record OR title+authors+year exact-matches a single OpenAlex/Semantic Scholar record. `partial` = at least one of those resolves but other fields are gap-filled from a related record. `inferred` = any of `{title, authors, year, doi}` was constructed from prose context rather than a verified API response.
 - **EvidenceEntry:** `{paper_id, locator, claim, quote, direction: positive|negative|neutral|mixed, concept, evidence_tier?: meta_analysis | systematic_review | experimental | observational | cross_sectional | qualitative | theoretical_or_review, scite_classification?: supporting|contrasting|mentioning, full_text_source?, metadata_resolution?}`
-  - `evidence_tier` is captured during extraction (see `lit-extracting`). The synthesis layer uses it to modulate prose register — a meta-analysis row produces declarative prose; a cross-sectional row produces correlational prose. The tier name appears explicitly in synthesis prose ("a meta-analysis of fourteen trials shows…") so it survives the markdown→audio handoff to NotebookLM.
+  - `evidence_tier` is captured during extraction (see `extract`). The synthesis layer uses it to modulate prose register — a meta-analysis row produces declarative prose; a cross-sectional row produces correlational prose. The tier name appears explicitly in synthesis prose ("a meta-analysis of fourteen trials shows…") so it survives the markdown→audio handoff to NotebookLM.
   - `metadata_resolution` mirrors the corresponding `Paper`'s value at extraction time; the cite-check uses it.
-- **AuditEntry:** `{phase, action, details{}, ts, status}` where `status ∈ {success, warning, failure, partial, skipped}`. Synthesis-verify entries gain `n_metadata_verified / n_metadata_partial / n_metadata_inferred` in `details`. Contradiction-check entries gain `n_same_question / n_different_questions / n_uncertain` in `details` (see `lit-contradiction-check`).
+- **AuditEntry:** `{phase, action, details{}, ts, status}` where `status ∈ {success, warning, failure, partial, skipped}`. Synthesis-verify entries gain `n_metadata_verified / n_metadata_partial / n_metadata_inferred` in `details`. Contradiction-check entries gain `n_same_question / n_different_questions / n_uncertain` in `details` (see `contradictions`).
 
 ## When to fire which skill
 
 | Phase | User says… | Skill to fire |
 |---|---|---|
-| Setup | "set up Scriptorium", first run, "what is this" | `setting-up-scriptorium` |
-| Direction (fuzzy goal) | "I want to learn about X", "I have a topic but I'm not sure what I want from it", "grill me on this topic" | `research-grill-me` |
-| Direction (need a question) | "I need to write a paper on X but don't have my question yet", "help me find the research question", "grill me on the question" | `research-questions-grill-me` |
-| Scope | "I want to do a lit review on X", "scope this review", "what should I search for" | `lit-scoping` |
-| Search | "find papers on X", "search for…" | `lit-searching` |
-| Screen | "filter by year/language/keyword", "apply inclusion criteria" | `lit-screening` |
-| Extract | "pull full text", "extract findings from this PDF" | `lit-extracting` |
-| Synthesize | "write the literature review section", "draft a synthesis" | `lit-synthesizing` |
-| Contradict | "where do papers disagree?", "find contradictions" | `lit-contradiction-check` |
-| Audit | "show the audit trail", "PRISMA flow" | `lit-audit-trail` |
-| Publish | "make a podcast/slides/mind map of this" | `lit-publishing` |
-| Orchestrate | "run a literature review on X (end-to-end)" | `running-lit-review` |
+| Setup | "set up Scriptorium", first run, "what is this" | `setup` |
+| Direction (fuzzy goal) | "I want to learn about X", "I have a topic but I'm not sure what I want from it", "grill me on this topic" | `grill-me` |
+| Direction (need a question) | "I need to write a paper on X but don't have my question yet", "help me find the research question", "grill me on the question" | `grill-question` |
+| Scope | "I want to do a lit review on X", "scope this review", "what should I search for" | `scope` |
+| Search | "find papers on X", "search for…" | `search` |
+| Screen | "filter by year/language/keyword", "apply inclusion criteria" | `screen` |
+| Extract | "pull full text", "extract findings from this PDF" | `extract` |
+| Synthesize | "write the literature review section", "draft a synthesis" | `synthesize` |
+| Contradict | "where do papers disagree?", "find contradictions" | `contradictions` |
+| Audit | "show the audit trail", "PRISMA flow" | `audit` |
+| Publish | "make a podcast/slides/mind map of this" | `publish` |
+| Orchestrate | "run a literature review on X (end-to-end)" | `review` |
 
 Scoping (phase 1) and final writing (phases 7+) stay with the user — Scriptorium covers phases 2–6.
 
@@ -132,12 +132,12 @@ Scoping (phase 1) and final writing (phases 7+) stay with the user — Scriptori
 1. Announce: "Using `using-scriptorium` to route this session."
 2. Run the probe (Pass 1 + Pass 2). Show the user what resolved.
 3. Brief the user in one sentence: "Connectors detected: <list>. State home: <choice>. Search backend: <choice>." If anything didn't resolve that the user mentioned having, offer the retry / manual-override path before continuing.
-4. If the user has not yet scoped the review, fire `lit-scoping`. Do not ask scoping questions yourself — `lit-scoping` owns that conversation.
+4. If the user has not yet scoped the review, fire `scope`. Do not ask scoping questions yourself — `scope` owns that conversation.
 5. Hand off to the phase-appropriate skill.
 
 ## Cowork-specific honesty notes
 
-- **No PostToolUse hooks.** Cite-checks and gate enforcement live entirely in skill prose. The discipline checkpoint at the end of `lit-synthesizing` is authoritative — do not skip it on the assumption that something downstream will catch a missing citation.
+- **No PostToolUse hooks.** Cite-checks and gate enforcement live entirely in skill prose. The discipline checkpoint at the end of `synthesize` is authoritative — do not skip it on the assumption that something downstream will catch a missing citation.
 - **No local filesystem.** Every artifact lives in the state home you picked at the top of the session. There is no `cwd` to fall back to.
-- **No bash.** This plugin does not invoke a CLI. Full-text retrieval that historically used a CLI in Claude Code (Unpaywall, arXiv) now runs via `WebFetch`; see `lit-extracting`. Network allowlist note: `WebFetch` requires the user's Cowork org to permit `api.unpaywall.org` and `export.arxiv.org`. If those hosts are blocked, the skill will fall through gracefully and tell the user.
+- **No bash.** This plugin does not invoke a CLI. Full-text retrieval that historically used a CLI in Claude Code (Unpaywall, arXiv) now runs via `WebFetch`; see `extract`. Network allowlist note: `WebFetch` requires the user's Cowork org to permit `api.unpaywall.org` and `export.arxiv.org`. If those hosts are blocked, the skill will fall through gracefully and tell the user.
 - **Session-only is real degradation.** If the probe selected session-only, warn the user every time you write an artifact that it will not persist, and offer to export to a connector once one is added.

@@ -1,5 +1,5 @@
 ---
-name: lit-synthesizing
+name: synthesize
 description: Use when the user asks to draft a literature review section, write a synthesis, or summarize the evidence. Produces synthesis.md with every claim backed by [paper_id:locator] tokens and runs a mandatory cite-check before committing.
 ---
 
@@ -9,7 +9,7 @@ Input: `evidence` artifact (claims with paper+locator). Output: `synthesis` arti
 
 ## Citation grammar
 
-All citations use the token `[paper_id:locator]`. The locator format is defined in `lit-extracting`: `page:N`, `page:N-M`, `sec:<name>`, `abstract`, `L<n>-L<m>`. **Never** write `[1]`, `[2]`, or numbered-citation style — those are claim-search MCP grammar and are stripped at search time. If a sentence needs multiple citations, chain the tokens: `[W1:page:4][W2:sec:Discussion]`.
+All citations use the token `[paper_id:locator]`. The locator format is defined in `extract`: `page:N`, `page:N-M`, `sec:<name>`, `abstract`, `L<n>-L<m>`. **Never** write `[1]`, `[2]`, or numbered-citation style — those are claim-search MCP grammar and are stripped at search time. If a sentence needs multiple citations, chain the tokens: `[W1:page:4][W2:sec:Discussion]`.
 
 ## Workflow
 
@@ -26,7 +26,7 @@ All citations use the token `[paper_id:locator]`. The locator format is defined 
 
    When a concept has rows at multiple tiers, lead with the highest and **name the tier explicitly in prose** ("a meta-analysis of fourteen trials shows…", "a single cross-sectional survey of college students reports…"). The explicit naming is the only mechanism that survives the markdown→audio handoff to NotebookLM — the host model has no metadata channel; it reads the synthesis as text.
 3. **Write transitions.** Transitions are allowed to be uncited (they don't make empirical claims). Keep them short.
-4. **Run the contradiction check** (hand off to `lit-contradiction-check`) before the final step; add its findings as a "Where authors disagree" subsection.
+4. **Run the contradiction check** (hand off to `contradictions`) before the final step; add its findings as a "Where authors disagree" subsection.
 5. **Mandatory final step — cite-check before commit.**
 
 ## Cite-check (THIS IS A HARD GATE — DO NOT SKIP)
@@ -41,7 +41,7 @@ Cowork has no PostToolUse hook to enforce this for you. The skill itself is the 
   - Meta → fine.
 - If a token is present but doesn't resolve → strip (strict) or flag `[UNSUPPORTED]` (lenient).
 
-**Part 2 — Metadata resolution.** For every cited evidence row, read its `metadata_resolution` value (inherited from the `Paper` shape via `lit-searching`). Count three buckets: `verified`, `partial`, `inferred`.
+**Part 2 — Metadata resolution.** For every cited evidence row, read its `metadata_resolution` value (inherited from the `Paper` shape via `search`). Count three buckets: `verified`, `partial`, `inferred`.
 
 - **Strict mode** blocks commit (status `failure`) if **any** citation in the synthesis carries `metadata_resolution: "inferred"`. The README's promise is "synthesis you can defend" — a single inferred-title citation is the kind of thing a committee member spot-checks and uses to question the whole audit trail. The threshold is binary: none of the citations are guessed.
 - **Lenient mode** emits a per-sentence warning list naming every inferred citation and the inferred field(s), so the user knows exactly which to verify by hand before submission.
@@ -79,4 +79,4 @@ After the cite-check, append one audit entry: `{phase: "synthesis", action: "ver
 
 ## Hand-off
 
-After the cite-check passes, report: "Synthesis written; N sentences, M citations, K unsupported (stripped/flagged)." If contradictions have not yet been surfaced as a separate pass, fire `lit-contradiction-check` next. Otherwise hand off to the user for review.
+After the cite-check passes, report: "Synthesis written; N sentences, M citations, K unsupported (stripped/flagged)." If contradictions have not yet been surfaced as a separate pass, fire `contradictions` next. Otherwise hand off to the user for review.

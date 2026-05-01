@@ -21,7 +21,7 @@ Skill files use `~~category` as a placeholder for whatever tool the user connect
 ## Required vs. optional
 
 - **Required:** at least one of `~~claim search` / `~~breadth search` / `~~biomed search`. Without one, the plugin runs in degraded mode (WebFetch against OpenAlex's public API) and tells you so.
-- **Recommended for institutional researchers:** `~~citation context` (Scite). Used by `lit-contradiction-check` to enrich named-camp disagreement with cross-corpus citation signals. Optional but adds a lot of polish to the contradiction surfacing.
+- **Recommended for institutional researchers:** `~~citation context` (Scite). Used by `contradictions` to enrich named-camp disagreement with cross-corpus citation signals. Optional but adds a lot of polish to the contradiction surfacing.
 - **Recommended:** at least one of `~~document store` / `~~knowledge base` / `~~notebook publish`. Without persistent state, your review evaporates at session end.
 - **Optional:** `~~notebook publish` is required only if you want to generate a podcast, slide deck, or mind map of the finished review.
 
@@ -34,7 +34,7 @@ When more than one persistent state connector is enabled, the plugin picks in th
 Some retrieval routes don't go through MCPs at all:
 
 - **Unpaywall and arXiv** are accessed via Cowork's `WebFetch` tool. They're free, public, no-auth APIs. Your Cowork org needs to allowlist `api.unpaywall.org` and `export.arxiv.org` for the cascade to use them.
-- **University library access** (EZproxy / OpenAthens) is configured via the `library_proxy_base` setting in `scriptorium-config`. When the OA cascade misses, Scriptorium generates a proxied URL using your library's prefix and hands it to you; you click, authenticate in your own browser, download the PDF, and drag it back into the Cowork chat. The agent never authenticates as you to your library — only your browser holds the session cookie. Proxy URL examples for major institutions live in `setting-up-scriptorium`.
+- **University library access** (EZproxy / OpenAthens) is configured via the `library_proxy_base` setting in `scriptorium-config`. When the OA cascade misses, Scriptorium generates a proxied URL using your library's prefix and hands it to you; you click, authenticate in your own browser, download the PDF, and drag it back into the Cowork chat. The agent never authenticates as you to your library — only your browser holds the session cookie. Proxy URL examples for major institutions live in `setup`.
 
 These two surfaces — public OA APIs and the library-proxy handoff — restore most of the full-text recall the Claude Code edition gets through its CLI.
 

@@ -1,5 +1,5 @@
 ---
-name: running-lit-review
+name: review
 description: Use when the user asks to run a lit review on a topic or research question end-to-end ("run a lit review on caffeine and working memory", "do a literature review for me on X"). Orchestrates the full pipeline — scope, search, screen, extract, synthesize, contradiction-check, audit, and optional publishing — by dispatching to the per-phase lit-* skills in order.
 ---
 
@@ -17,20 +17,20 @@ This skill runs the end-to-end review pipeline. It is the single entry point for
 
    Three responses route differently:
 
-   - *"Clear question, just need the literature"* → continue to Step 1 (`lit-scoping`).
-   - *"Clear topic but need the question"* → fire `research-questions-grill-me`. When it returns with `{research_question, sub_questions, tradition, boundaries}`, continue to Step 1 with that state pre-populated.
-   - *"I'm not even sure what I want yet"* / *"grill me first"* → fire `research-grill-me`. It may route to `research-questions-grill-me` along the way; eventually returns with handoff state. Then continue to Step 1.
+   - *"Clear question, just need the literature"* → continue to Step 1 (`scope`).
+   - *"Clear topic but need the question"* → fire `grill-question`. When it returns with `{research_question, sub_questions, tradition, boundaries}`, continue to Step 1 with that state pre-populated.
+   - *"I'm not even sure what I want yet"* / *"grill me first"* → fire `grill-me`. It may route to `grill-question` along the way; eventually returns with handoff state. Then continue to Step 1.
 
    Skip Step 0 entirely when (a) the user's initial prompt already contains a research question (a sentence ending with `?` that passes a basic So-What check), or (b) the user explicitly says they have it scoped.
 
-1. **Scope** — fire `lit-scoping`. Produces a user-approved scope artifact. Every downstream phase reads it. If grill-me handoff state is present, scoping uses it as pre-resolved fields and only asks about gaps.
-2. **Search** — fire `lit-searching`. Runs queries across the connected scholarly-search MCPs. Writes to `corpus`. Appends an audit entry.
-3. **Screen** — fire `lit-screening`. Applies inclusion/exclusion criteria. Updates `corpus` row statuses. Appends an audit entry.
-4. **Extract** — fire `lit-extracting`. For each kept paper, resolves full text via the cascade and writes evidence rows. Appends an audit entry per paper.
-5. **Synthesize** — fire `lit-synthesizing`. Writes the synthesis. **The skill's mandatory final cite-check is the discipline checkpoint.** Do not skip.
-6. **Contradiction-check** — fire `lit-contradiction-check` as a **separate pass** after synthesis, never inside it. Group evidence by concept; surface positive/negative disagreement as named camps; insert a "Where authors disagree" subsection into the synthesis; re-run the cite-check.
-7. **Audit** — `lit-audit-trail` writes every phase transition. By the end, the trail contains entries for each phase.
-8. **Publishing (optional)** — if the user asked for derivative artifacts (podcast / slides / mind map / video), fire `lit-publishing`. Preconditions: synthesis cite-check passed and contradiction-check has been run. If the user did not ask, skip this phase and offer it as a question at the end of the report-back.
+1. **Scope** — fire `scope`. Produces a user-approved scope artifact. Every downstream phase reads it. If grill-me handoff state is present, scoping uses it as pre-resolved fields and only asks about gaps.
+2. **Search** — fire `search`. Runs queries across the connected scholarly-search MCPs. Writes to `corpus`. Appends an audit entry.
+3. **Screen** — fire `screen`. Applies inclusion/exclusion criteria. Updates `corpus` row statuses. Appends an audit entry.
+4. **Extract** — fire `extract`. For each kept paper, resolves full text via the cascade and writes evidence rows. Appends an audit entry per paper.
+5. **Synthesize** — fire `synthesize`. Writes the synthesis. **The skill's mandatory final cite-check is the discipline checkpoint.** Do not skip.
+6. **Contradiction-check** — fire `contradictions` as a **separate pass** after synthesis, never inside it. Group evidence by concept; surface positive/negative disagreement as named camps; insert a "Where authors disagree" subsection into the synthesis; re-run the cite-check.
+7. **Audit** — `audit` writes every phase transition. By the end, the trail contains entries for each phase.
+8. **Publishing (optional)** — if the user asked for derivative artifacts (podcast / slides / mind map / video), fire `publish`. Preconditions: synthesis cite-check passed and contradiction-check has been run. If the user did not ask, skip this phase and offer it as a question at the end of the report-back.
 
 ## Report-back template (final turn)
 
@@ -48,11 +48,11 @@ End with a single question: "Do you want a podcast / slide deck / mind map / vid
 ## What you must never do
 
 - Run a phase out of order. Synthesis-before-extract is silent plagiarism risk.
-- Smooth over contradictions during synthesis. That is `lit-contradiction-check`'s job.
+- Smooth over contradictions during synthesis. That is `contradictions`'s job.
 - Skip the audit trail for any phase. The whole point of PRISMA is reconstructability.
 - Re-implement search / screen / verify / extract logic inside this skill. Route to the per-phase skills every time.
 - Accept a synthesis that did not pass the cite-check.
-- Auto-publish without explicit user consent. The publishing privacy note in `lit-publishing` is mandatory.
+- Auto-publish without explicit user consent. The publishing privacy note in `publish` is mandatory.
 
 ## When a phase fails
 

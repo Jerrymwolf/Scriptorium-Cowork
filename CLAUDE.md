@@ -11,7 +11,7 @@ This is the **Claude Cowork edition** of Scriptorium, a literature-review plugin
 ## What's different from the Claude Code edition
 
 - **No CLI.** No `pipx install`, no `scriptorium` binary. Pure skills + MCP.
-- **No hooks.** Cowork has no PostToolUse or SessionStart hook system; the cite-check is enforced by `lit-synthesizing`'s mandatory final step, and the discipline preamble is loaded from `skills/using-scriptorium/INJECTION.md`.
+- **No hooks.** Cowork has no PostToolUse or SessionStart hook system; the cite-check is enforced by `synthesize`'s mandatory final step, and the discipline preamble is loaded from `skills/using-scriptorium/INJECTION.md`.
 - **No slash commands.** Cowork dispatches via natural language; the README documents trigger phrases instead.
 - **Connector-agnostic.** Skills reference tool *categories* (`~~claim search`, `~~document store`, `~~notebook publish`) rather than specific products. The runtime probe in `using-scriptorium` resolves placeholders to whichever MCPs the user has connected. See `CONNECTORS.md`.
 

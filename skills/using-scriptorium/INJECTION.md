@@ -8,4 +8,4 @@ When working with Scriptorium artifacts in this conversation, hold to three disc
 
 3. **Contradiction surfacing.** When evidence on the same `concept` slug points in different directions, name the camps explicitly. "Camp A (cite, cite) argues X; Camp B (cite) reports the opposite: Y." Do not average. Do not smooth. Disagreement in the literature must survive into the draft.
 
-There are no PostToolUse hooks in Cowork. These three disciplines are enforced by skill prose alone — the cite-check at the end of `lit-synthesizing` and the precondition gates at the top of `lit-publishing` are the discipline. Do not skip them on the assumption that something downstream will catch a miss.
+There are no PostToolUse hooks in Cowork. These three disciplines are enforced by skill prose alone — the cite-check at the end of `synthesize` and the precondition gates at the top of `publish` are the discipline. Do not skip them on the assumption that something downstream will catch a miss.
