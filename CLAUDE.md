@@ -42,9 +42,7 @@ There are deliberately **no** `commands/`, `agents/`, or `hooks/` directories. C
 
 ## Releasing v0.1.3 and onward (the lazy way)
 
-After v0.1.2, releasing is one command. Two options:
-
-**Option A — local script.** From the repo root after bumping `plugin.json`, `marketplace.json`, and `CHANGELOG.md`:
+After v0.1.2, releasing is one command. From the repo root after bumping `plugin.json`, `marketplace.json`, and `CHANGELOG.md`:
 
 ```bash
 ./scripts/release.sh 0.1.3
@@ -52,13 +50,7 @@ After v0.1.2, releasing is one command. Two options:
 
 The script preflights (gh auth, clean tree, version match, release doesn't exist), commits any pending changes, builds the .plugin, tags, pushes, cuts the GitHub release, attaches the artifact, and prints the share line. It extracts release notes from the version's CHANGELOG section automatically.
 
-**Option B — tag-triggered GitHub Action.** Also handled by `.github/workflows/release.yml`. Just bump versions, commit, tag, and push:
-
-```bash
-git commit -am "Release v0.1.3" && git tag v0.1.3 && git push && git push origin v0.1.3
-```
-
-The Action verifies version consistency, builds the .plugin, extracts release notes, and creates the release on GitHub. No local `gh` invocation needed.
+(A tag-triggered GitHub Action used to live at `.github/workflows/release.yml` as a second path. It was removed because it raced `release.sh` on every tag push and failed. `release.sh` is now the only release path — do not re-add the Action.)
 
 For the very first release on a fresh repo, see "First-time publish from Claude Code" below.
 
