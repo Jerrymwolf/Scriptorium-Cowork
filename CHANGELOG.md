@@ -2,6 +2,228 @@
 
 All notable changes to scriptorium-cowork are documented here.
 
+## 0.5.0 — 2026-05-04
+
+The voice-reconciliation release. Closes the v0.4.x incoherence where the disconfirmer gate (intent-keyed) and the synthesize voice authorship policy (output_intent-keyed) could disagree — e.g., `intent: defending + output_intent: memo` would fire the gate but write in building voice. v0.5.0 puts both halves of the defending-position discipline under the same control.
+
+### A1 — Voice keys on intent (the discipline-coherence fix)
+
+- **Voice authorship policy now keys on `intent`, not `output_intent`.** Three rules instead of seven:
+  - `intent: defending` → defending voice (system surfaces synthesis only)
+  - `intent: building` → building voice (system suggests argument as drafts)
+  - `intent: curious` → curious voice (system may author argument with interpretation tag)
+- **Default-intent table per `output_intent`** preserves v0.4.x behavior for users who never see the intent question. chapter/brief default to defending; memo/teaching/deck default to building; podcast/exploration default to curious. The default fires when `grill-question` doesn't run.
+- **Disconfirmer gate (R8) and voice now both key on `intent`** — the two halves of defending-position discipline are internally coherent. No more memo-with-defended-position-but-building-voice contradictions.
+- **`intent_source` field** added to handoff state: `"user"` (user picked explicitly via `grill-question` Step 0 cold-start) vs. `"derived"` (set by default table because grill-question didn't fire). Used by scope to decide whether to surface unusual-combination warnings.
+- **Soft warnings for unusual `intent` × `output_intent` combinations** added to scope's Step 4 scan. Non-blocking; surfaced in the recap so the user can confirm or revise:
+  - chapter + curious → "Chapters usually defend a position. Confirm?"
+  - memo + curious → "Memos usually carry a recommendation. Want exploration mode?"
+  - exploration + defending → "Exploration is for thinking out loud, not staking positions. Want chapter?"
+  - exploration + building → "Want memo or brief instead?"
+  - podcast + defending → "Defended-position podcasts are rare — confirm?"
+  - deck + curious / deck + defending → "Decks usually carry a recommendation. Confirm?"
+  Warnings only fire when `intent_source: "user"` — derived defaults don't trigger warnings the user never asked for.
+
+### Why this matters in user terms
+
+In v0.4.x, picking `intent: building` for a dissertation chapter had no visible effect on the rendered output — voice still resolved to defending per output_intent. The form widget was theater. v0.5.0 makes the user's intent pick actually drive how the system writes. Defended memo gets defending voice. Building chapter gets building voice. The form means what it says.
+
+### Migrating from v0.4.1
+
+- **No state changes.** Existing scopes and configs work unchanged.
+- **No v0.4.x re-renders required** — for users who never hit `grill-question`'s cold-start path, voice resolves identically (per the default-intent table). Behavior change only affects users who explicitly picked an intent that disagreed with their output_intent.
+- **Audit log additivity:** `details.intent_source` is now recorded on direction-phase entries. Existing readers continue to work; the new key is additive.
+
+### Files touched
+
+- `skills/synthesize/SKILL.md` — voice table replaced (output_intent-keyed → intent-keyed); default-intent table added
+- `skills/scope/SKILL.md` — Step 4 soft-warning scan extended with 7 unusual-combination warnings
+- `skills/grill-question/SKILL.md` — Step 0 prose updated; sets `intent_source: "user"` on cold-start, `"derived"` on handoff
+- `skills/grill-me/SKILL.md` — exit table sets explicit `intent` and `intent_source: "derived"` on every direct-to-review path
+- `scripts/smoke-test.sh` — 12 new A1 contract checks
+- `CHANGELOG.md`, `README.md`, `TODO.md` — version notes
+- `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` — version bump
+
+## 0.4.1 — 2026-05-04
+
+The render-correctness patch. v0.4.0's memo trace shipped with raw audit-grammar tokens (`[consensus:9b8a4808...:abstract]`) visible in the rendered output — exactly the failure mode `NARRATION.md` line 31 prohibits. This release fixes that and locks in APA 7th edition as the canonical citation style.
+
+### Render layer
+- **R20**: render skill mandates explicit translation of `[paper_id:locator]` synthesis-grammar tokens to user-facing citations before any rendered artifact ships. Spec'd algorithm, named the failure mode (audit-grammar leaking into render), added smoke-test enforcement. The synthesis grammar is preserved only in the audit log and the click-to-source viewer's data attributes — never in body text.
+- **R21**: APA 7th edition is the canonical citation style. Inline format: `(Author, Year)` for single, `(Smith & Jones, 2023)` for two, `(Li et al., 2023)` for 3+ from first cite. Multiple-paper inline: semicolon-separated, alphabetized. Narrative form: `Author (Year) finds…`. References-list format: alphabetized, italicized journal names, sentence-case article titles. Alternative styles (Chicago, MLA, IEEE, Vancouver) are tracked as v0.5.0+ candidates behind a config flag.
+- **R22**: `scripts/smoke-test.sh` now greps every rendered Markdown artifact in outputs for unexpanded `[paper_id:locator]` tokens. Their presence is a release blocker. Catches the v0.4.0 failure structurally.
+
+### Probe robustness
+- **Probe gap fix**: the `~~breadth search` keyword set now includes `"semantic scholar"` (with a space) alongside the no-space, underscore, and hyphen variants. The v0.4.0 memo trace surfaced two real Cowork tools whose descriptions used the human-readable spacing that the v0.4.0 keyword set didn't catch. Lesson encoded in skill prose: keyword sets must include human-readable forms alongside API/identifier forms.
+
+### Discipline clarity
+- **`<arg>` enforcement scope**: synthesize prose now states explicitly that the mechanical script (`runtime/cite-check.py`) does NOT enforce per-tier rules (factual / synthesis / argument). Per-tier discipline requires Haiku-judged classification and runs in inline mode only. The script's job is the floor: every cited token resolves, total citations meet the floor, no inferred metadata in strict mode. v0.4.0 prose was ambiguous on this; v0.4.1 names the boundary clearly.
+
+### Migrating from v0.4.0
+- **No state changes.** All v0.4.0 artifacts and configs work unchanged.
+- **Render output format change**: any user-facing rendered Markdown that previously contained literal `[paper_id:locator]` tokens (a v0.4.0 bug, not a feature) now contains APA-formatted parenthetical citations. Re-render any v0.4.0 memos with `/render` for the corrected output.
+- **Citation style is APA 7th edition by default** — the citation-style config key lands in v0.5.0+; for now, v0.4.1 ships APA, full stop.
+
+## 0.4.0 — 2026-05-04
+
+The comprehensive UX & discipline patch. Closes the v0.3.0 gaps surfaced by cold-walk audit: the cite-check script silently dropped every PMID-style citation; `output_intent` was set in grill-me but only partly consumed downstream; the connector probe leaked the skill's own name on first turn; review re-asked direction even when grill-me had handed off; the Cowork-only cite-check fallback was under-specified; long pipelines went silent without a glanceable progress indicator; the end-of-pipeline closing was hardcoded for chapter shape; the disconfirmer gate had no real trigger; vocabulary files were duplicated across grill skills.
+
+### P0 fix: cite-check on biomed corpora
+- **R0**: `runtime/cite-check.py` regex now accepts numeric-prefix `paper_id`s (was `[a-zA-Z]…`, rejected every `pmid:38920760` token). Test fixture covers pmid / openalex / consensus shapes; smoke test invokes it.
+
+### Packaging fix: cite-check.py actually ships
+- **Revision A**: runtime helper scripts moved from `scripts/` to a new top-level `runtime/` directory. Previously, `scripts/*` was excluded from the `.plugin` build but skills referenced `scripts/cite-check.py` — meaning the cite-check script the v0.3.0 release-note promised was never in the shipped artifact. Skill prose now references `runtime/cite-check.py` and `runtime/build-viewer.py`. Dev-only scripts (release.sh, validate-plugin.js, smoke-test.sh) stay in `scripts/`.
+
+### `output_intent` end-to-end (R2, R10, R12, R19)
+- `scope` reads `output_intent` from grill handoff and auto-calibrates `corpus_target`, `year_range`, `publication_types`, `depth` from a per-intent table. Explicit user overrides win.
+- `synthesize` voice authorship policy now keys directly on `output_intent` (chapter/brief → defending; memo/teaching/deck → building; podcast/exploration → curious). Closes the v0.3.0 misalignment where memo could land in either building or defending depending on grill-me wording.
+- `review`'s closing question adapts: chapter → "podcast version, slides?", memo → "Slack-ready, one-pager?", podcast → "ship to NotebookLM?", etc. Seven intent-keyed variants.
+- `render` mode adapts: chapter/brief/teaching → click-to-source HTML viewer; memo/exploration → 1-page Markdown + viewer; podcast/deck → NotebookLM bundle + viewer.
+- `scope` recap shape adapts: chapter/brief/teaching/deck → full dissertation-style table; memo/podcast/exploration → 4-line condensed recap (drops year_range, methodology, publication_types since they're auto-calibrated).
+
+### Pipeline orchestration
+- **R4**: `review` Step 0 (direction check) now skips when grill-me/grill-question handoff state is in context. Closes the v0.3.0 redundancy where direction was asked twice.
+- **R5**: `scriptorium-progress-<slug>` Cowork artifact updates at every phase boundary. 7-step progress card with `pending` / `active` / `done` / `errored` states, glanceable status independent of narration cadence. Wires up existing infra (Cowork artifacts), not a new feature.
+- **R15**: dropped hard wall-clock estimates ("12–20 minutes", "about 2 minutes") from skill narration. Replaced with relative phrases per `NARRATION.md` §Timing language. Real Cowork latency varies; estimates were aspirational.
+- **R16** (hypothesis, opt-in): `search` Step 2.5 shows constructed queries for review before firing, behind `[scriptorium] preview_queries = false` flag. Default off pending Annie-test feedback. Flagged for v0.5.0 reassessment.
+
+### Discipline (script + prose)
+- **R1**: `is_meta()` substring rules in `runtime/cite-check.py` now honestly documented in synthesize prose as "mechanical script mode" alongside Haiku-judged inline mode. Closes prose/code contradiction (smoke test verified both claims passed; in v0.3.0, the script reintroduced the very rules the prose said were replaced).
+- **R6**: synthesize Cowork-only fallback gets explicit per-sentence walk algorithm with same outputs as the Python script. Substring vs. Haiku difference matters only for borderline list-item-shaped empirical sentences.
+
+### Grill flow
+- **R8**: `grill-question` gets Intent check Step 0 (read intent from grill-me handoff or elicit cold-start as form widget with curious / building / defending pills + data-other). Disconfirmer gate (Q5) now reliably triggers — fires only when `intent: defending`. Closes v0.3.0 gap where the gate's trigger condition was never resolved.
+- **R9**: disconfirmer Q5 form gets four example-shape pills modeling the specificity bar; clicking a pill reveals a pre-framed textarea. Users no longer face a bare textarea with no anchor for what specificity looks like.
+
+### Single source of truth + state
+- **R7**: `shared-vocabulary.md` consolidated. `skills/grill-me/references/shared-vocabulary.md` is now a one-line pointer to `skills/grill-question/references/shared-vocabulary.md`. Validator addition catches drift.
+- **R14**: connector overrides now persist across sessions in `scriptorium-config`'s `[scriptorium.connector_overrides]` block. Stale overrides (saved tool no longer connected) emit `connector.override.stale` audit entry and fall back to probe.
+- **R17**: `grill-me` and `grill-question` now append audit entries on completion (`direction.grill-me.complete` / `direction.grill-question.complete`). Every phase entry's `details` block now includes `output_intent` — additive wire-format change; existing audit-trail readers keep working.
+
+### Narration & escape hatches
+- **R3**: dropped "Using `using-scriptorium` to route this session" line from first-turn checklist — it directly violated `NARRATION.md`'s prohibition on raw skill names in chat. Probe now runs silently.
+- **R11**: `NARRATION.md` gets §Failure-state narration with canonical template (plain-language phase name + one-sentence diagnosis + one-sentence consequence + retry/override/stop options) plus three filled examples.
+- **R18**: `using-scriptorium` documents Skip-ahead routes for power users — "I have a corpus, just extract", "Re-run the cite-check", "Just publish what I have", "Re-render the viewer", etc. Each route checks preconditions and surfaces gaps in plain language rather than silently falling through.
+
+### Cleanup
+- **R13**: removed stale smoke-test placeholder (`scripts/smoke-test.sh` line 36–37 placeholder regex that was annotated "the real check is below"). The real check is the only check.
+- Smoke-test version regex generalized from `0\.[23]\.[0-9]+` to `0\.[0-9]+\.[0-9]+` — permanent strategy that doesn't drift on every minor bump.
+
+### Migrating from v0.3.0
+- **No breaking state changes.** `scriptorium-config` TOML gains optional `[scriptorium.connector_overrides]` and `preview_queries` keys; existing configs work unchanged.
+- **Audit log wire format**: every phase entry's `details` now includes `output_intent`. Additive — existing keys unchanged. If you have downstream tooling that asserts `details` keys, allowlist the new key.
+- **Script paths**: skills now reference `runtime/cite-check.py` and `runtime/build-viewer.py`. If you have downstream tooling that invoked `scripts/cite-check.py`, update the path.
+- **Default `output_intent`** for legacy v0.3.0 sessions where intent isn't set: chapter (the safest, most rigorous calibration).
+
+## 0.3.0 — 2026-05-04
+
+The discipline-enforcement release. Closes the v0.2.2 failure mode where a "strategy memo" intent silently fell through to vibe-mode prose with zero citations and fabricated heuristics.
+
+### Architectural change: every Scriptorium exit now produces a literature-backed artifact
+- **`grill-me` exits rewritten.** Every user intent now routes through `review` with calibrated `{output_intent, depth}` parameters. No exit silently falls through to a non-existent skill or to "no skill — journal it." Casual consumption → review with `podcast` intent. Strategic decision → review with `memo` intent. Just-thinking → review with `exploration` intent and a small lit scan. Even 5-minute curiosity sessions now run a 5–10 paper search.
+- **`review` accepts `output_intent` dispatch.** New table maps `chapter / memo / brief / podcast / teaching / exploration / deck` to corpus_target, synthesis length, voice, and final artifact format. The pipeline is the same; the calibration changes.
+
+### Added: mechanical cite-check enforcement
+- **`scripts/cite-check.py`** — Python script that walks a synthesis, classifies sentences, and exits non-zero on:
+  - Total citation count below the floor for the output_intent (10 for chapter, 3 for memo, etc.)
+  - Any `[paper:loc]` token that doesn't resolve to an evidence row
+  - Any cited paper with `metadata_resolution: inferred` in strict mode
+- **`synthesize` SKILL.md mandates the script as the final hard gate.** The cite-check is no longer purely operator-trust. The script catches the v0.2.2 failure mode (synthesis with zero citations) automatically — exit 1 means do not ship.
+
+### Fixed
+- **No more silent fall-through to vibe-mode.** The strategy-memo intent that produced a zero-citation, fabricated-heuristics memo in v0.2.2 now routes through the full review pipeline with `memo` calibration: 10–15 paper scan, ~800-word synthesis with strategic-recommendation framing, every claim cited.
+
+### What changes for users
+You can ask Scriptorium for a quick podcast on a topic you're curious about, or a strategy memo, or a teaching artifact, or a dissertation chapter — and every one of those will produce an artifact backed by real literature, with click-to-source citations. The depth scales (5 papers for curious, 200+ for exhaustive); the discipline doesn't.
+
+### Migration from v0.2.x
+- Existing v0.2.x reviews don't need to change.
+- New runs with intents that didn't previously route cleanly (memo, podcast, teaching, exploration) now get full pipeline treatment instead of bare prose.
+
+## 0.2.2 — 2026-05-03
+
+UX patch — interactive choice forms. Closes follow-on feedback from a v0.2.1 grill-me test: multi-choice questions were rendered as bulleted prose that the user had to type a reply to, when they should have been clickable forms with a "type something different" escape.
+
+### Fixed
+- **Every multi-choice question in the grill, scope, review, publish, render, and setup skills now fires a clickable form widget**, never a bulleted text question. Click is the right interaction; type is the escape hatch.
+- **Every form includes a "type something different" option** (`data-other` escape hatch). Users are never locked into the system's option set.
+
+### Added
+- **`NARRATION.md` §Interactive choice contract** — the mandate. Pattern reference, when-to-fire/when-not-to-fire rules, list of skills with choice points.
+- **Smoke-test contract checks** — release-blocker if any choice-point skill is missing the Interactive choices section, or if `NARRATION.md` lacks the contract or the `data-other` requirement.
+
+### What changes for users
+The grill no longer feels like an interview where you have to type "purpose: strategy memo" back at the AI. Click the option that fits, or click "something different" and type your own. Same for every other choice in the pipeline — depth, audience, render target, retry-vs-override.
+
+## 0.2.1 — 2026-05-03
+
+UX patch — narration. Closes feedback (from the only user who has tried it: Annie) that the messages between queries were confusing and that the entire process should be narrated so anyone could understand. Pure prose work; no architectural changes.
+
+### Fixed
+- **Plain-language narration during long operations.** Every skill now follows a `User narration` contract: before any operation, write what's happening in plain language; during, emit periodic updates; after, summarize in one human sentence. Internal vocabulary (corpus, evidence row, disconfirmer, locator, cite-check, etc.) is translated on first use per `NARRATION.md`.
+- **Search and synthesize phases — the worst silent periods — now narrate continuously.** Users can tell what the system is doing without re-reading or guessing. No more raw tool-call output bleeding into chat.
+- **Connector probe results are translated.** `~~claim search` becomes "a peer-reviewed paper search"; users no longer see internal `~~category` placeholders.
+- **Front-door grilling translates the question into the user's language.** The disconfirmer, tradition, boundaries, and tier-3 fields no longer appear as raw field-name jargon; the grill asks conversationally and recaps in the user's own words.
+
+### Added
+- **`NARRATION.md`** — the style guide every skill follows. Vocabulary translation table, narration rhythm, cost budget, the Annie test (operationalized as a 5-question reader-comprehension check).
+- **Smoke-test contract checks for narration.** All 14 skills must reference a `User narration` section; `NARRATION.md` must contain the Annie test, vocabulary table, and cost budget. Release-blocker.
+
+### What changes for users
+The same pipeline runs the same way; what's different is what you see while it's happening. You'll always know what's going on, what's coming next, and roughly how long it'll take. Internal Scriptorium vocabulary stays internal — chat reads like a person walking you through the work, not a build log.
+
+## 0.2.0 — 2026-05-02
+
+The discipline-gates release. Tightens the front-door grilling, the synthesis cite-check, and the connector probe. Demos a click-to-source viewer as a Cowork artifact.
+
+### Three discipline gates (new)
+- **Disconfirmer gate in `grill-question`.** For users defending a position (dissertation, peer-reviewed paper, thesis), the grill now requires a named falsification target — *"if I'm doing my job, I should be looking for things that could push back on your view; what's the most credible challenge?"* Generic answers ("any counter-evidence") get one reflective re-ask; specific answers (a finding pattern, a published critic, a methodological objection) pass and drive downstream search/synthesize/contradiction phases. Curious and building intents skip the gate.
+- **Three-tier sentence typing in `synthesize`.** Sentences are now classified as factual (cites one paper at a locator with a verbatim quote), synthesis (chains ≥2 quote-anchored evidence rows), argument (the author's interpretive position; tagged visibly), or meta (heading/transition). Cite-check applies different rules per tier. The argument layer is user-authored by default for `defending` intent; system-authored only for `curious` (with an "interpretation" marker).
+- **LLM-judged meta-detection.** Replaces the v0.1.7 substring `is_meta()` rules. Cite-check now uses Cowork's Haiku shortcut to classify uncited sentences semantically — no more hand-tuning string patterns to recognize legitimate author-voice transitions.
+
+### Connector probe upgrade
+- **Description-keyword fallback (Pass 1.5).** When a tool's name doesn't match any keyword set (typically UUID-registered tools), the probe now reads its MCP description for the same keywords. Real impact: `mcp__abc123__search_articles` with a description containing "PubMed" auto-resolves to `~~biomed search` without forcing manual override.
+
+### UX — click-to-source viewer (now a real skill)
+- **New `render` skill.** `skills/render/SKILL.md` produces a click-to-source HTML viewer for any synthesis from its corpus + evidence + synthesis.md triple. Hard precondition: synthesis cite-check must have passed. Output is a Cowork artifact (`scriptorium-viewer-<review-slug>`) that opens in the sidebar — every citation is clickable; the side panel shows the paper title, venue, DOI, evidence-row metadata (tier, direction, concept), the verbatim supporting quote, and a one-click link to the source.
+- **New `scripts/build-viewer.py`.** Reference builder that the `render` skill invokes (or re-implements inline if the user is in a Cowork-only environment). Takes `--synthesis`, `--corpus`, `--evidence`, `--out` and emits a self-contained HTML file.
+
+### Folded in from v0.1.8
+- Workflow fix: `synthesize` and `contradictions` no longer race; `review` owns the contradictions phase, `synthesize` asks before firing inline when invoked directly.
+- Validator: `scripts/validate-plugin.js` runs at release time. Wired into `release.sh`. Removed the redundant description-length-only check.
+- CLAUDE.md: corrected skill count, replaced manual zip command with release-script reference, added Post-release verification + Rollback sections.
+- CHANGELOG: v0.1.5 and v0.1.6 annotated as internal milestones (never released to GitHub).
+
+### Migrating from v0.1.x
+- **Cite-check is stricter for synthesis sentences.** Before v0.2.0, any cited sentence passed if it had at least one resolving `[paper:loc]` token. v0.2.0 distinguishes factual sentences (one cite) from synthesis sentences (≥2 cites required). If a v0.1.x synthesis fails the v0.2.0 cite-check, the most likely cause is synthesis sentences with only one citation — re-run `synthesize` to re-classify and re-cite, or add the second supporting citation manually.
+- **Argument sentences now require visible tagging.** Inline interpretive claims must be wrapped in `<arg>...</arg>` in source markdown or rendered with an "*interpretation*" marker in HTML. Untagged argument sentences will be flagged.
+- **`/synthesize` direct invocation now asks before firing `/contradictions`.** Pipeline behavior under `/review` is unchanged.
+
+### What changes for users
+- **`/grill-question` users:** when defending a position, you'll be asked to name what would change your mind. This is the Pocock-style discipline — uncomfortable on first encounter, indispensable by the third dissertation chapter.
+- **`/synthesize` users:** factual / synthesis / argument distinction is now visible in the cite-check report. Author-voice synthesis no longer gets stripped as "unsupported."
+- **All users:** the click-to-source viewer is available as a Cowork artifact for any synthesis you produce. Open any citation; see the source.
+
+### Out of scope, deferred to v0.3.0 / v1.0.0
+- Loop-mode `open` orchestrator and `refine` skill (with verbs: drop, expand, regenerate, pin, fork, diff) — the loop-mode UX (v1.0.0)
+- Forkable domain grills (`grill-question-medical`, `grill-question-policy`) (v1.0.0)
+- Multi-target render expansion (direct-to-Word, direct-to-Notion without NotebookLM detour) (v0.3.0)
+- README rewrite for the dual-mode positioning (v1.0.0)
+
+## 0.1.8 — 2026-05-02
+
+Bug fix and release-pipeline hardening.
+
+### Fixed
+- **synthesize/contradictions workflow conflict.** `synthesize`'s Step 4 told the model to fire `contradictions` before the cite-check; `review`'s Phase 6 told the model `contradictions` runs as a separate pass after synthesis. Two skills disagreeing on workflow produced inconsistent behavior depending on which entry point the user used. Fix: `synthesize` is now responsible only for drafting and the cite-check; `review` owns the contradictions phase. When invoked directly, `synthesize` asks the user whether to run `contradictions` next rather than firing it inline.
+
+### Added
+- **`scripts/validate-plugin.js`** — Node-based release-time validator. Checks manifest validity, version consistency across `plugin.json` and `marketplace.json`, plugin.json description length (≤256, Cowork's cap), skill count (13), frontmatter integrity, stale renamed-skill references, the synthesize/contradictions workflow contract, and packaged-plugin shape (no developer-only files leak into the `.plugin`). `scripts/release.sh` now runs it automatically before tagging; the redundant description-length check inside the release script was removed.
+
+### Cleaned
+- CLAUDE.md updated: skill count corrected from "eleven" to "thirteen"; stale hand-rolled zip command replaced with `./scripts/release.sh <version>` plus `node scripts/validate-plugin.js`.
+- CHANGELOG: v0.1.5 and v0.1.6 entries annotated as internal milestones (never released to GitHub; bundled into v0.1.7) so users browsing the CHANGELOG don't try to install non-existent versions.
+
 ## 0.1.7 — 2026-04-30
 
 Comprehensive skill rename — drops verbose prefixes (`lit-*`, `research-*`, `running-*`, `setting-up-*`) so the slash menu shows clean short verbs instead of long-named auto-surfaced skills.
@@ -37,6 +259,8 @@ Existing reviews continue to work — skill names appear in user-memory notes on
 
 ## 0.1.6 — 2026-04-30
 
+> **Note:** This version was an internal milestone, never released to GitHub. All v0.1.5 and v0.1.6 changes shipped publicly as part of v0.1.7. The git tag (if any) is preserved for development history.
+
 Slash commands plus second-pass fix on `grill-me`.
 
 ### Added — slash commands (three-command MVP)
@@ -53,6 +277,8 @@ Three commands, not all twelve possible — daily-use commands only. Mid-pipelin
 - **Acknowledgment-permitted clause** added to the failure-modes section so the model doesn't over-correct: a warm one-line acknowledgment of the topic name (*"I see you're interested in [topic]. Let me help you figure out what you want to do with it."*) is allowed; what's not allowed is asking the user *about* the topic's content.
 
 ## 0.1.5 — 2026-04-30
+
+> **Note:** This version was an internal milestone, never released to GitHub. All v0.1.5 and v0.1.6 changes shipped publicly as part of v0.1.7. The git tag (if any) is preserved for development history.
 
 Real-world bug fix from the first install test.
 

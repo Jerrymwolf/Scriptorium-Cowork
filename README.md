@@ -6,6 +6,14 @@ Scriptorium is a research-direction and literature-review plugin for Claude Cowo
 
 No CLI. No local shell. No hooks. Pure skills + the MCPs you've already connected.
 
+> **New in v0.5.0** — voice-reconciliation release. Closes the v0.4.x incoherence where picking `intent: building` for a chapter had no effect on the rendered output (voice resolved to defending per the output_intent table, ignoring your pick). v0.5.0 keys voice on intent directly; the form widget now means what it says. Soft warnings flag unusual combinations (chapter+curious, memo+curious, etc.) without blocking. The disconfirmer gate and voice are now both on the same control — no more memo-with-defended-position-but-building-voice contradictions.
+>
+> **New in v0.4.1** — render-correctness patch. Closes the v0.4.0 bug where rendered memos showed raw audit-trail tokens like `[consensus:abc123:abstract]` to the user. Citation style is now APA 7th edition: `(Li et al., 2023)` inline, alphabetized references list, italicized journal names. Probe-gap fix for `"Semantic Scholar"` (with space) tools. Plus per-tier `<arg>` enforcement clarity in synthesize prose.
+>
+> **New in v0.4.0** — comprehensive UX & discipline patch. Closes the v0.3.0 gaps: the cite-check script now correctly resolves PMID-style citations (was P0-broken on biomed corpora); `output_intent` flows end-to-end so a memo intent gets a memo-shaped output, not a chapter-shaped one; a glanceable progress card updates in your Cowork sidebar at every phase; the disconfirmer gate finally has a real trigger (intent check Q0 in grill-question); failure-state narration follows a canonical template; the connector probe runs silently instead of leaking its skill name. See [CHANGELOG.md](./CHANGELOG.md) for the full list and migration notes.
+>
+> **New in v0.2.0** — three discipline gates: a disconfirmer requirement during grilling for users defending a position, three-tier sentence typing in the synthesis cite-check (factual / synthesis / argument), and a description-keyword fallback in the connector probe for UUID-named tools. Plus a click-to-source viewer artifact that opens in the Cowork sidebar and lets you click any citation in a synthesis to see the source paper, the supporting quote, and a one-click DOI link.
+
 > **The canonical doctoral workflow:** You know what you're interested in — something about leadership and remote work, or caffeine and cognition, or whatever's been nagging at you. But *"I want to research X"* isn't a research question yet. Finding the question requires reading literature you haven't read, and reading the literature efficiently requires knowing what you're looking for. Classic chicken-and-egg. Scriptorium breaks the loop: grill the idea into shape, generate the question with you, run the lit review with full audit trail, surface contradictions, and ship a synthesis chapter you'd defend. *(And then, if you want a podcast for the commute, that's one more sentence.)*
 
 ---
