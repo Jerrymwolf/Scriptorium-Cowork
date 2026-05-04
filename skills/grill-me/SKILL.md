@@ -35,16 +35,28 @@ Resolve in order: **purpose** (entertainment / orientation / instruction / produ
 
 ## Stop when
 
-The user can answer *"what's the next thing you'll do?"* in one sentence. Five exits:
+The user can answer *"what's the next thing you'll do?"* in one sentence.
 
-| Exit | Destination |
-|---|---|
-| Casual consumption | NotebookLM + reading list |
-| Instructional | syllabus / backward-design skill |
-| Strategic decision | strategy-memo skill |
-| Research output, **no question yet** | `grill-question` (carry `{purpose, audience, artifact, depth, tradition?, topic}` as handoff state) |
-| Research output, **question already clear** | `review` directly |
-| Just thinking | no skill — journal it |
+## Exits — every path ends in `review` (rewritten v0.3.0; intent derivation added v0.5.0)
+
+**Architectural principle:** every Scriptorium exit produces a literature-backed artifact. The depth and shape change; the discipline does not. There are no silent fall-throughs to vibe-mode prose.
+
+| User intent | Hand off to | With params |
+|---|---|---|
+| Casual consumption / podcast / "make me a thing to listen to" | `review` | `{output_intent: podcast, depth: scan, intent: curious, intent_source: derived}` |
+| Instructional / teaching artifact / syllabus | `review` | `{output_intent: teaching, depth: representative, intent: building, intent_source: derived}` |
+| Strategic decision / memo / "should I do X?" | `review` | `{output_intent: memo, depth: scan, intent: building, intent_source: derived}` |
+| Research output, **no question yet** | `grill-question` first, then `review` | `{purpose, audience, artifact, depth, topic}` carried; `grill-question` sets `intent` and `intent_source` |
+| Research output, **question already clear** | `review` directly | `{output_intent: chapter, depth: <user-specified>, intent: defending, intent_source: derived}` |
+| Just thinking / "I don't even know what I want" | `review` | `{output_intent: exploration, depth: scan, intent: curious, intent_source: derived}` |
+
+**Intent derivation (A1, v0.5.0):** when grill-me hands off directly to `review` without firing `grill-question` (the memo / podcast / teaching / exploration / direct-chapter paths above), it must set `intent` AND `intent_source: "derived"` per the table. This preserves v0.4.x behavior (default voice per output_intent) while making the intent value explicit in handoff state so downstream skills (synthesize voice policy, scope soft warnings) can read it consistently. If `grill-question` fires, IT sets intent (with `intent_source: "user"` for cold-start picks); grill-me's derived value is discarded.
+
+**No exit routes to a non-existent skill.** No exit routes to "no skill." If the user's intent doesn't fit one of these rows, ask one more clarifying question rather than guessing.
+
+The `output_intent` parameter tells `review` how to shape the output: a memo gets recommendation framing and ~800 words; a podcast gets narrative pacing; a chapter gets peer-review register; etc. The `depth` parameter governs corpus size and search aggressiveness. Together they translate the user's "what do you want to walk away with?" into the pipeline's calibration.
+
+The literature search is non-negotiable. Even a 5-minute "I'm just curious" exploration runs a 5–10 paper scan. No artifact ships from Scriptorium without cited sources.
 
 ## Wrong-skill redirect
 
@@ -58,4 +70,55 @@ If the user opens with both an artifact and a topic ("I need to write a chapter 
 - **Audience-projection.** If the user describes what their committee/audience wants, ask *"what would feel satisfying to **you**?"*.
 - **Discovery escape hatch.** At any point *"I don't know yet"* is a valid answer.
 
-Shared vocabulary: `references/shared-vocabulary.md`.
+Shared vocabulary: `../grill-question/references/shared-vocabulary.md` (canonical; `references/shared-vocabulary.md` here is a pointer to avoid drift — R7, v0.4.0).
+
+## Audit append (R17, v0.4.0)
+
+On completion (when handing off to `review` or `grill-question`), append one audit entry via the state adapter:
+
+```
+{
+  phase: "direction",
+  action: "grill-me.complete",
+  details: {
+    purpose, audience, artifact, depth, tradition?,
+    topic, output_intent_inferred, n_turns
+  },
+  ts, status: "success"
+}
+```
+
+The `output_intent_inferred` value is the value passed to `review` (chapter / memo / brief / podcast / teaching / exploration / deck). Audit consumers can filter by intent without re-deriving from `purpose`.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. The grill is conversational by design, so silence isn't the issue here — vocabulary is.
+
+When asking the tree questions (purpose, audience, artifact, depth), use the user's own words, not internal field names. Never say "let me ask about your tier-3 dimensions" or "I need to lock the scope." Just ask the next question conversationally.
+
+When handing off, summarize what you learned from them in their words:
+
+> So you're heading toward a chapter for your committee, on caffeine
+> and working memory, going deep enough to teach a peer. Got it. Now
+> I'll help you sharpen the actual research question.
+
+Don't surface internal handoff state (`{purpose, audience, artifact, depth}`) as a JSON-y recap; translate into a sentence the user would say themselves.
+
+## Interactive choices (added v0.2.2)
+
+Every multi-choice question in this skill fires a form widget per `NARRATION.md` §Interactive choice contract — not a bulleted prose question.
+
+**Purpose question** (the most common opening): cards or pills for the five common shapes (chapter/paper, strategy memo, orientation, teaching artifact, just clearer thinking) plus a `data-other` "something different" option that reveals a textarea.
+
+**Audience question**: pills for the typical audiences (just you, you+committee, future-you/playbook) plus the `data-other` escape.
+
+**Depth question**: pills for orientation/fluency/mastery/novel-contribution plus `data-other`.
+
+**Artifact question**: cards or pills for the artifact shapes you've inferred plus `data-other`.
+
+Always include the escape hatch. Never lock the user into the system's option set. If the user picks `data-other`, treat the textarea reply as the answer and route accordingly.
+
+Form questions should still be conversationally framed in the question text — the form is the input shape, not a replacement for narration. Example:
+
+> What do you want to walk away with?
+> [pills: chapter or paper · strategy memo · orientation · teaching artifact · just clearer thinking · something different]
