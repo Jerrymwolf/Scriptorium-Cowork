@@ -43,6 +43,8 @@ Corpus-building turns are tool-to-tool: read the search result, write to the sta
 
 1. Load the scope artifact.
 2. Construct the initial query from `research_question` and `fields`. Apply `year_range` and `publication_types` as filters. Set per-source `limit` from `corpus_target` (target / number-of-sources, with a floor of 25).
+2.5. **Show queries before firing (R16, v0.4.0 — hypothesis, opt-in).** If `scriptorium-config` has `preview_queries = true`, render a form widget with each constructed query as a labeled pill (e.g., "Consensus: 'caffeine working memory healthy adults 2015-2024'"). Pills: `approve all` / `regenerate` / `edit individual queries` (reveals one textarea per query) / `data-other`. Default flag value is `false` — feature is hypothesis-only until Annie-test feedback validates it (per Risk register in v0.4.0 spec). If the flag is unset or `false`, skip Step 2.5 and proceed directly to Step 3.
+
 3. For each enabled source category:
    - `~~claim search` — call the Consensus-style search tool; apply the fencing rule above.
    - `~~breadth search` — call Scholar Gateway / OpenAlex via its MCP.
@@ -63,3 +65,35 @@ Stop when (a) the user is satisfied with the count, or (b) the last 20 new resul
 ## Hand-off
 
 Report `{n_returned, n_deduped, n_kept_for_screening}`. Hand off to `screen`.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. Search has the worst silent-period in the pipeline; treat narration as load-bearing here.
+
+**Before any query fires**, write a plain-language paragraph naming:
+- What you're searching for, in the user's words (not search keywords)
+- Which databases, translated (Consensus → "a database covering most peer-reviewed papers"; PubMed → "the medical research database"; Scholar Gateway → "a scholarly search engine")
+- How many queries total, framed as relative duration ("this takes a while; I'll mark each search as it finishes" — R15, v0.4.0: no hard minute estimate)
+
+Example opening:
+
+> I'm going to search the published literature now. Five different angles
+> to cover the question — workplace contexts, the values angle, meaning,
+> moral identity, and a check on what could prove you wrong. Two databases:
+> Consensus, which covers most peer-reviewed papers, and a scholarly search
+> engine. I'll narrate each search as it finishes — feel free to step away.
+
+**Between queries**, emit one human sentence per query completion. Translate counts and topics into plain language:
+
+> First search done — found 20 papers about how the theory applies in
+> workplaces. Starting the values angle now.
+
+**After all queries**, summarize and transition:
+
+> All five searches done across both databases. After removing duplicates,
+> I have 73 unique papers. Next I'll filter these to keep only the ones
+> that match your scope — about 30 seconds.
+
+**Never surface in chat:** raw tool names (`mcp__...`), `~~category` placeholders, paper IDs, JSON dumps, search-syntax keywords. Tool calls happen silently; the user sees only the human-readable summary.
+
+If a search returns zero results, narrate that honestly ("Nothing came back on this angle — that itself is informative; I'll note it in the gap analysis"), don't silently move on.

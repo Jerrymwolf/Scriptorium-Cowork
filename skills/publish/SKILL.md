@@ -54,3 +54,33 @@ Wait for explicit confirmation. Do not assume "publish" itself implies consent f
 - Publish without the cite-check having passed first.
 - Skip the audit entry. The publishing audit is the single most important row in the trail — it's what your committee asks about when they ask "where did the corpus go?"
 - Try to recover from a Studio quota error by retrying silently. Surface the raw error to the user; let them decide.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. Publish moves data off-platform; narration here is also part of the consent contract.
+
+**Before publishing:**
+
+> I'll send your finished review to NotebookLM (Google's tool) so it
+> can generate the [podcast / slide deck / mind map / video]. This
+> means uploading your synthesis, the contradictions section, and the
+> source PDFs to NotebookLM. The audit log records this upload. About
+> a minute to upload, a few minutes for NotebookLM to generate the
+> artifact. OK to proceed?
+
+**After:**
+
+> Done. Your podcast is at [URL]. The notebook is yours; you can edit
+> the sources or generate other artifact types from there.
+
+Translate `studio_create`, `notebook_create`, etc. — never surface raw API names.
+
+## Interactive choices (added v0.2.2)
+
+Every multi-choice question in this skill fires a form widget per `NARRATION.md` §Interactive choice contract.
+
+**Artifact-type question**: pills for podcast / slide deck / mind map / video / all plus `data-other`.
+
+**Privacy-note confirmation**: yes/no pills + textarea for "wait, I have questions first."
+
+Always include `data-other`.

@@ -55,7 +55,7 @@ Ask one question at a time, in this order. Skip any obvious from the conversatio
 
 4. **Languages.** Default `["en"]`. Ask if the user is non-English-primary.
 
-Persist answers as a Cowork user-memory note named `scriptorium-config`, TOML-shaped:
+Persist answers as a Cowork user-memory note named `scriptorium-config`, TOML-shaped (extended v0.4.0 — R14: `connector_overrides` block now persists across sessions):
 
 ```toml
 [scriptorium]
@@ -64,6 +64,15 @@ library_proxy_base = "https://proxy.library.upenn.edu/login?url="
 cite_check_mode = "strict"
 languages = ["en"]
 state_home = "notebooklm"
+preview_queries = false  # R16 hypothesis flag — opt-in pre-search query review
+
+[scriptorium.connector_overrides]
+# Optional. Saved manual overrides applied before Pass 1 of the connector probe.
+# If a saved override points to a tool that's no longer connected, falls back
+# to probe and warns the user (recovery audit entry: connector.override.stale).
+"claim_search"   = "mcp__plugin_research_consensus__search"
+"biomed_search"  = "mcp__plugin_research_pubmed__search_articles"
+"breadth_search" = "mcp__plugin_research_scholar__search"
 ```
 
 Any of these fields may be empty. The cascade falls through gracefully when a field is missing.
@@ -93,3 +102,37 @@ Do not auto-fire `scope` here. Let the user initiate the next turn so they have 
 - Does not validate any account credentials — it just records what the user said.
 - Does not authenticate to the user's library proxy. Library access happens through the user's browser; the agent only generates the proxied URL.
 - Does not pre-fetch any papers. Search starts in `search`, not here.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. Setup is a one-time onboarding; the impression set here matters.
+
+**Walk the user through setup conversationally:**
+
+> Welcome. Let me get Scriptorium set up for you. This takes about
+> 60 seconds.
+>
+> First, I'll check what tools you have connected (search engines,
+> file storage, etc.). Then I'll ask where you'd like Scriptorium
+> to keep your work — Notion, Google Drive, NotebookLM, or just in
+> this conversation. Then a few quick preferences.
+
+Translate every connector category as you encounter it (per the
+table in `NARRATION.md`). Never surface raw `mcp__` names or
+`~~category` placeholders.
+
+**At setup completion:**
+
+> All set. To start a review, just say what you want to research —
+> something like "help me research caffeine and working memory."
+> I'll take it from there.
+
+## Interactive choices (added v0.2.2)
+
+Every multi-choice question in this skill fires a form widget per `NARRATION.md` §Interactive choice contract.
+
+**State-home selection**: pills for Notion / Google Drive / NotebookLM / session-only plus `data-other`.
+
+**Connector confirmation**: pills with auto-detected tools, plus `data-other` for manual override path.
+
+Always include `data-other`.

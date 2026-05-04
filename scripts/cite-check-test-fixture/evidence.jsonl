@@ -1,0 +1,3 @@
+{"paper_id":"pmid:38920760","locator":"abstract","claim":"Caffeine improves WM at 200mg","quote":"Caffeine at 200mg significantly improved working memory performance.","direction":"positive","concept":"caffeine_dose","evidence_tier":"experimental"}
+{"paper_id":"openalex:W2741809807","locator":"sec:Results","claim":"Meta-analysis confirms effect","quote":"Across 14 trials, the pooled effect was d=0.42.","direction":"positive","concept":"meta_evidence","evidence_tier":"meta_analysis"}
+{"paper_id":"consensus:abc123","locator":"page:7","claim":"Heterogeneous effect sizes","quote":"Effect sizes varied substantially across populations.","direction":"mixed","concept":"population_heterogeneity","evidence_tier":"observational"}

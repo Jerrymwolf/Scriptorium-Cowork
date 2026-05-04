@@ -71,6 +71,15 @@ if [ "$ACTUAL_VERSION" != "$VERSION" ]; then
 fi
 echo "  plugin.json: $ACTUAL_VERSION"
 
+# Full plugin validation
+if [ -f scripts/validate-plugin.js ]; then
+  node scripts/validate-plugin.js >/tmp/scriptorium-cowork-validate.log
+  cat /tmp/scriptorium-cowork-validate.log
+else
+  echo "ERROR: scripts/validate-plugin.js is missing." >&2
+  exit 1
+fi
+
 # Release doesn't exist yet
 if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
   echo "ERROR: release $TAG already exists on $REPO." >&2
@@ -112,14 +121,6 @@ zip -r "$PLUGIN_FILE" . \
 SKILL_COUNT="$(unzip -l "$PLUGIN_FILE" | grep -c 'SKILL\.md$' || true)"
 SIZE_KB="$(($(stat -f%z "$PLUGIN_FILE" 2>/dev/null || stat -c%s "$PLUGIN_FILE") / 1024))"
 echo "  built: $PLUGIN_FILE ($SIZE_KB KB, $SKILL_COUNT SKILL.md files)"
-
-# Defensive plugin.json description-length check — Cowork's validator caps at ~256 chars
-DESC_LEN=$(python3 -c "import json; print(len(json.load(open('.claude-plugin/plugin.json'))['description']))")
-if [ "$DESC_LEN" -gt 256 ]; then
-  echo "  ERROR: plugin.json description is $DESC_LEN chars (Cowork's validator caps at ~256). Shorten it." >&2
-  exit 1
-fi
-echo "  description length: $DESC_LEN chars (OK, under 256)"
 
 echo
 echo "=== Extract CHANGELOG section for release notes ==="

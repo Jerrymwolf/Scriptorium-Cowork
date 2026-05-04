@@ -98,3 +98,26 @@ Default to per-paper isolation unless the user is quota-pressed. Record the choi
 ## Hand-off
 
 After every kept paper is extracted (or terminally marked abstract_only), report "N papers extracted, M evidence rows written, K papers fell through to abstract-only" and hand off to `synthesize`.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. Extract is the first phase that touches paper content; users often expect this to be slow.
+
+**Before:**
+
+> Pulling the key findings from each of the [N] papers — the specific
+> claims and quotes that will go into your draft. This part takes the
+> longest, usually two to four minutes.
+
+**During** (for full-text cascade, narrate cascade outcomes per paper or in batches):
+
+> Got full text on [N] papers; the rest are coming through abstract-only
+> because they're behind paywalls. I'll mark which is which so you can see
+> the difference.
+
+**After:**
+
+> [N] specific quotes pulled across the [M] papers — these are what your
+> draft will be built from. Now I'll write the draft.
+
+Translate "evidence rows" → "specific quotes that support a claim". Never surface `[paper_id:locator]` tokens in chat.

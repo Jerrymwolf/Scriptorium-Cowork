@@ -53,3 +53,24 @@ Append one entry per concept with at least one candidate pair: `{phase: "contrad
 ## Hand-off
 
 Insert rendered sections into `synthesis` under up to three separate headings: *"Where authors disagree on the same question"* (same-question), *"Where findings vary across populations / timeframes / operationalizations"* (different-questions), *"Disagreements I couldn't classify"* (uncertain). **Skip any heading whose bucket is empty** — never insert an empty section. If all three buckets are empty (no candidate pairs at all), insert a single one-liner under *"Notes on disagreement"*: *"No direction-mismatch pairs found across N concepts in the evidence."* Re-run `synthesize` Step 5 (cite-check) on the updated draft — the cite-check is mandatory after any synthesis edit.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. Contradictions is short but conceptually loaded.
+
+**Before:**
+
+> Now I'll surface where the papers actually disagree with each other.
+> Real research has disagreement; the discipline is naming it instead
+> of averaging it away. About a minute.
+
+**After:**
+
+> Found [N] real disagreements (where two papers answer the same
+> question different ways) and [M] places where what looks like
+> disagreement is actually different studies asking different questions
+> in different settings. I'll write that into a section called "Where
+> the literature pushes back" so you and your reader can see it.
+
+Translate "same-question" / "scope-variation" / "uncertain" into plain
+language as above; never surface them as raw category labels.

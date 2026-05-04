@@ -15,7 +15,7 @@ description: Use when the user mentions a literature review, asks to find/screen
 
 ## Connector probe (run at session start)
 
-The probe runs in two passes. Pass 1 enumerates every available MCP tool and matches it against keyword sets. Pass 2 resolves each Scriptorium category to whatever Pass 1 found. If a category the user expects is missing, ask before falling through to a degraded path.
+The probe runs in three passes (v1.0.0). Pass 1 matches tool *names* against keyword sets. Pass 1.5 (added v1.0.0) matches tool *descriptions* when the name is opaque (UUID-registered tools, unhelpfully short names). Pass 2 resolves each Scriptorium category to whatever Pass 1 + 1.5 found. If a category the user expects is missing, ask before falling through to a degraded path.
 
 ### Pass 1 — enumerate and match
 
@@ -24,14 +24,24 @@ List every tool whose name starts with `mcp__`. For each, lowercase the name and
 | Keyword set (case-insensitive substring) | Resolves to |
 |---|---|
 | `consensus` | `~~claim search` |
-| `scholar_gateway`, `scholar-gateway`, `scholargateway`, `semantic_scholar`, `semantic-scholar`, `semanticscholar`, `openalex` | `~~breadth search` |
+| `scholar_gateway`, `scholar-gateway`, `scholargateway`, `semantic_scholar`, `semantic-scholar`, `semanticscholar`, `semantic scholar`, `openalex` | `~~breadth search` |
 | `pubmed`, `pmc` | `~~biomed search` |
 | `scite` | `~~citation context` |
 | `notebooklm`, `notebook_lm` | `~~notebook publish` |
 | `google_drive`, `google-drive`, `gdrive`, `box`, `onedrive`, `sharepoint` | `~~document store` |
 | `notion`, `confluence` | `~~knowledge base` |
 
-Naming variants Cowork uses today: `mcp__claude_ai_<service>__*` (older), `mcp__plugin_<category>_<service>__*` (current plugin-style), `mcp__<service>-mcp__*` (vendor-named). Match all of them.
+Naming variants Cowork uses today: `mcp__claude_ai_<service>__*` (older), `mcp__plugin_<category>_<service>__*` (current plugin-style), `mcp__<service>-mcp__*` (vendor-named), `mcp__<uuid>__*` (Cowork connector store anonymized). Match all of them.
+
+### Pass 1.5 — description-keyword fallback (added v1.0.0)
+
+For any tool whose name did NOT match a keyword set in Pass 1 (typically UUID-registered tools), read its MCP description string and apply the same keyword sets to it. Real example from a real session: `mcp__6de5d9ff-...__search_articles` had a name with no keyword match, but its description contains "PubMed" and "biomedical and life sciences research articles" — Pass 1.5 resolves it to `~~biomed search` cleanly without forcing the user to intervene.
+
+**v0.4.1 keyword extension:** the breadth-search list now includes `"semantic scholar"` (with a space) in addition to the no-space and underscore/hyphen variants. The v0.4.0 memo trace surfaced two real Cowork tool descriptions that wrote the database name with a space ("Semantic Scholar"), which the underscore-only keyword set didn't catch. Lesson: keyword sets must include the human-readable form alongside the API/identifier forms.
+
+If both Pass 1 and Pass 1.5 fail to resolve a category, surface the unresolved tools to the user for manual override:
+
+> The following tools are connected but I couldn't auto-route: `mcp__abc123__semanticSearch`, `mcp__def456__paper_search`. If any of these is your `~~breadth search` or `~~claim search`, say *"use mcp__abc123__semanticSearch as my breadth search"* and I'll record the override.
 
 ### Pass 2 — report and confirm
 
@@ -76,7 +86,9 @@ If a probe pass missed a tool and the user knows the exact MCP tool name, accept
 > User: "Use mcp__plugin_research_consensus__search as my claim search."
 > Assistant: "Recorded — `~~claim search` now resolves to `mcp__plugin_research_consensus__search`. Continuing."
 
-Manual overrides persist for the session and are written to the audit trail as a `connector.override` entry. Shape: `{phase: "connector-probe", action: "override", details: {category, tool_name, reason: "user-provided"}, ts, status: "success"}`.
+Manual overrides persist **across sessions** (R14, v0.4.0) — written to `scriptorium-config`'s `[scriptorium.connector_overrides]` block via the state adapter, and applied before Pass 1 fires on subsequent sessions. Each override appends an audit entry: `{phase: "connector-probe", action: "override", details: {category, tool_name, reason: "user-provided"}, ts, status: "success"}`.
+
+If a saved override points to a tool that's no longer connected this session, fall back to probe and warn the user. Shape of the recovery audit entry: `{phase: "connector-probe", action: "override.stale", details: {category, saved_tool_name, fallback_to: "<probe-resolved-tool or none>"}, ts, status: "warning"}`.
 
 ## Persisted state-home preference
 
@@ -129,11 +141,25 @@ Scoping (phase 1) and final writing (phases 7+) stay with the user — Scriptori
 
 ## First-turn checklist
 
-1. Announce: "Using `using-scriptorium` to route this session."
-2. Run the probe (Pass 1 + Pass 2). Show the user what resolved.
-3. Brief the user in one sentence: "Connectors detected: <list>. State home: <choice>. Search backend: <choice>." If anything didn't resolve that the user mentioned having, offer the retry / manual-override path before continuing.
-4. If the user has not yet scoped the review, fire `scope`. Do not ask scoping questions yourself — `scope` owns that conversation.
-5. Hand off to the phase-appropriate skill.
+1. Run the connector probe (Pass 1 + Pass 1.5 + Pass 2) silently. **Do not surface the skill name in chat** — the user sees results, not implementation. (R3, v0.4.0: removed announcement leak that contradicted NARRATION.md.)
+2. Brief the user in one sentence using plain-language connector names from `NARRATION.md`'s vocabulary table: "I checked your tools — you've got [X], [Y], and [Z] connected." If anything didn't resolve that the user mentioned having, offer the retry / manual-override path before continuing.
+3. If the user has not yet scoped the review, fire `scope`. Do not ask scoping questions yourself — `scope` owns that conversation.
+4. Hand off to the phase-appropriate skill.
+
+## Skip-ahead routes (R18, v0.4.0 — power-user fast-path)
+
+If the user already has partial state from a prior session or external work, these phrases skip the linear pipeline:
+
+| User says… | Route | Precondition check |
+|---|---|---|
+| "I have a corpus, just extract" / "extract from this corpus" | `extract` | corpus artifact exists at state home, OR user pastes a corpus.jsonl in chat |
+| "Re-run the cite-check" / "verify the synthesis" | `synthesize` cite-check section only (skip drafting) | synthesis + corpus + evidence all present |
+| "Just publish what I have" / "ship to NotebookLM" | `publish` | synthesis cite-check passed, contradictions ran |
+| "Re-render the viewer" / "rebuild the click-to-source" | `render` | synthesis + corpus + evidence all present |
+| "Show me the audit trail" / "PRISMA flow" | `audit` | audit log exists |
+| "Add this PDF to my corpus" | `extract` (single-paper mode) | scope or corpus exists |
+
+If the user invokes a fast-path but the precondition fails, surface the gap in plain language and offer the upstream phase: *"To extract, I need a corpus first. Want me to run a search, or do you have a corpus.jsonl to paste?"* Don't silently fall through.
 
 ## Cowork-specific honesty notes
 
@@ -141,3 +167,25 @@ Scoping (phase 1) and final writing (phases 7+) stay with the user — Scriptori
 - **No local filesystem.** Every artifact lives in the state home you picked at the top of the session. There is no `cwd` to fall back to.
 - **No bash.** This plugin does not invoke a CLI. Full-text retrieval that historically used a CLI in Claude Code (Unpaywall, arXiv) now runs via `WebFetch`; see `extract`. Network allowlist note: `WebFetch` requires the user's Cowork org to permit `api.unpaywall.org` and `export.arxiv.org`. If those hosts are blocked, the skill will fall through gracefully and tell the user.
 - **Session-only is real degradation.** If the probe selected session-only, warn the user every time you write an artifact that it will not persist, and offer to export to a connector once one is added.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. This is the user's first contact with Scriptorium; the impression set here carries through.
+
+**During the connector probe:**
+
+Translate every `~~category` placeholder into plain language. Never surface raw `mcp__` tool names or `~~` syntax.
+
+> I checked what tools you have connected. You've got a peer-reviewed
+> paper search (Consensus), a scholarly search engine, and the medical
+> research database. These will cover most research needs. I don't see
+> NotebookLM connected — that's optional, only needed if you want a
+> podcast or slide deck of your finished review.
+
+**When you ask for a manual override**, translate the request into human terms:
+
+> A few of the connected tools showed up under codes I couldn't auto-route
+> (this happens). If any of these is your search engine — I see one called
+> `mcp__abc123` — say "use that as my search" and I'll record it.
+
+Internal `~~category` names appear only in the audit log, never in user-facing chat.

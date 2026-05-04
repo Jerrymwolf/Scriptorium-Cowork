@@ -42,3 +42,20 @@ Screening is reversible — set a row's `status` back to `candidate` and clear `
 ## Hand-off
 
 After reporting kept/dropped counts, ask: "Proceed to full-text extraction on the N kept papers?" Hand off to `extract`.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. Screen is a quieter phase but still unannounced today.
+
+**Before applying criteria:**
+
+> Now I'm filtering the papers we found to keep only the ones that match
+> what you're researching — by year, language, and topic. About 30 seconds.
+
+**After:**
+
+> [N] papers kept, [M] dropped because [reason in plain language —
+> e.g., "they were about education, not workplace"]. Moving to pulling
+> the key findings from each paper next.
+
+Translate "kept/dropped" status into plain language; never surface raw rule names like `must_include` or `must_exclude`.

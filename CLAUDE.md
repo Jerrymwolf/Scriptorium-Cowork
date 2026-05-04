@@ -19,7 +19,8 @@ This is the **Claude Cowork edition** of Scriptorium, a literature-review plugin
 
 - `.claude-plugin/plugin.json` — plugin manifest
 - `.claude-plugin/marketplace.json` — marketplace manifest for `/plugin marketplace add Jerrymwolf/Scriptorium-Cowork`
-- `skills/` — eleven SKILL.md files implementing the pipeline
+- `skills/` — fourteen SKILL.md files implementing the router, setup, grill flows, review pipeline, and rendering
+- `runtime/` — runtime helper scripts shipped in the `.plugin` (cite-check.py, build-viewer.py). Skill prose references these (NOT `scripts/`). Added v0.4.0 to fix the v0.3.0 packaging bug where `scripts/*` was excluded from the build but skills referenced `scripts/cite-check.py`. Dev-only scripts (release.sh, validate-plugin.js, smoke-test.sh, fixtures) stay in `scripts/`.
 - `CONNECTORS.md` — tool-category map and state-home cascade
 - `README.md` — user-facing install + usage
 - `CHANGELOG.md` — version history
@@ -32,7 +33,8 @@ There are deliberately **no** `commands/`, `agents/`, or `hooks/` directories. C
 - Skill prose is authoritative. Do not add Bash invocations, CLI flags, or filesystem paths assuming a local cwd — Cowork has none of those.
 - Keep `~~category` placeholders intact in skill prose; the runtime probe resolves them. Hardcoding a specific MCP tool name (e.g., `mcp__claude_ai_Consensus__search`) is acceptable only inside `using-scriptorium/SKILL.md`'s probe table.
 - When adding a new phase skill, fire `using-scriptorium` first in its body and read state through the adapter mapping. Do not invent a new state shape.
-- The `.plugin` zip is built from this repo root (`zip -r /tmp/scriptorium-cowork.plugin . -x "*.git*" "*.DS_Store"`). The build artifact is gitignored — only ship via GitHub Release.
+- The `.plugin` zip is built by `./scripts/release.sh <version>`, which excludes developer-only files (`scripts/`, `.github/`, marketplace metadata, git metadata, macOS metadata, prior `.plugin` artifacts). Do not hand-roll the zip command for release artifacts.
+- Before every release, run `node scripts/validate-plugin.js`. The release script runs it automatically, but running it before version bumps catches stale docs earlier.
 
 ## Distribution paths
 
@@ -75,7 +77,12 @@ gh repo create Jerrymwolf/Scriptorium-Cowork \
   --source . --remote origin --push
 
 # 4. Build the .plugin artifact (gitignored — only ships via Release)
-zip -r /tmp/scriptorium-cowork.plugin . -x "*.git*" "*.DS_Store" "*.plugin"
+node scripts/validate-plugin.js
+zip -r /tmp/scriptorium-cowork.plugin . \
+  -x "*.git*" "*.DS_Store" "*.plugin" \
+     "scripts/release.sh" "scripts/*" \
+     ".github/*" \
+     ".claude-plugin/marketplace.json"
 
 # 5. Tag and create the v0.1.0 release with the .plugin file attached
 git tag -a v0.1.0 -m "v0.1.0 — initial Cowork-native release"
@@ -91,16 +98,9 @@ After step 5, verify by opening `https://github.com/Jerrymwolf/Scriptorium-Cowor
 ## Subsequent releases
 
 ```bash
-# bump version in plugin.json, marketplace.json, CHANGELOG.md
-git commit -am "Release vX.Y.Z"
-git push
-zip -r /tmp/scriptorium-cowork.plugin . -x "*.git*" "*.DS_Store" "*.plugin"
-git tag -a vX.Y.Z -m "vX.Y.Z — <one-line summary>"
-git push origin vX.Y.Z
-gh release create vX.Y.Z \
-  --title "Scriptorium for Cowork vX.Y.Z" \
-  --notes-file CHANGELOG.md \
-  /tmp/scriptorium-cowork.plugin
+# bump version in plugin.json, marketplace.json, and CHANGELOG.md
+node scripts/validate-plugin.js
+./scripts/release.sh X.Y.Z
 ```
 
 ## Sister repo

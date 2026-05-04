@@ -55,3 +55,16 @@ Every lit-* skill appends its own entries; this skill is **read-focused**. If th
 - `skipped` — the user explicitly opted out of this action.
 
 When summarizing, surface every `failure` and `warning` to the user before completing the report — these are the ones their committee will ask about.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. Audit is technical by design but the user-facing summary should still be readable.
+
+**When showing the audit trail:**
+
+> Here's the record of every step — every search, every filter, every
+> claim, every decision. This is what an advisor or committee can
+> inspect to confirm you didn't skip steps or cherry-pick findings.
+> [N] entries across [M] phases.
+
+Never paste raw audit JSON into chat. If the user asks to see it, offer to open the audit log in their file viewer or render it as a readable PRISMA-style summary.
