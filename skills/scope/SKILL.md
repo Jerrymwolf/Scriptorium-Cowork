@@ -15,14 +15,31 @@ The goal of this skill is a single artifact: a **user-approved scope object** th
 2. **Recap + approval gate** — never proceed to search without an explicit user approval of a structured recap.
 3. **Audit trail** — on approval, append one `scope_approved` entry to the audit log via the state adapter.
 
-## Step 0 — Grill-me handoff state check
+## Step 0 — Grill-me handoff state check (extended v0.4.0 — R2)
 
 If `review` fired one of the grill-me skills before invoking this one, handoff state is in conversation context:
 
-- From `grill-me`: `{purpose, audience, artifact, depth, tradition?, topic}`
-- From `grill-question`: `{research_question, sub_questions, tradition, boundaries}`
+- From `grill-me`: `{purpose, audience, artifact, depth, tradition?, topic, output_intent}`
+- From `grill-question`: `{research_question, sub_questions, tradition, boundaries, intent, disconfirmer, output_intent}`
+- From `review` direct: `{output_intent, depth}` (if user came in with a clear question)
 
 Treat any present field as **resolved** in the inference pass (Step 2). Skip Tier 1+2 questions that already have answers. Go directly to Step 5 (recap and approval) with a one-line acknowledgment: *"You've already worked through purpose and question with the grill-me skill — let me confirm the scope and we'll search."*
+
+### Output_intent calibration table (R2, v0.4.0)
+
+If `output_intent` is present in handoff, auto-resolve these dimensions from the calibration table below. Explicit user overrides always win — calibration only fills unresolved gaps.
+
+| `output_intent` | corpus_target | year_range | publication_types | depth |
+|---|---|---|---|---|
+| `chapter` | exhaustive | 1985+ | peer-reviewed | exhaustive |
+| `memo` | 12 | last 10y | peer-reviewed + grey | representative |
+| `brief` | 35 | last 10y | peer-reviewed | representative |
+| `podcast` | 12 | no restriction | any | representative |
+| `teaching` | 25 | no restriction | peer-reviewed | representative |
+| `exploration` | 8 | no restriction | any | scan |
+| `deck` | 30 | last 10y | peer-reviewed | representative |
+
+Skip Tier 1+2 questions for any dimension auto-resolved by this table. If the user explicitly contradicts a calibration value (e.g., output_intent=memo but they ask for 50 papers), the explicit value wins.
 
 ## Step 1 — Existing-scope check
 
@@ -93,9 +110,29 @@ Before rendering the recap, check for these. Warnings go into the recap under "S
 | `publication_types=[preprints]` only AND `purpose=dissertation` | "Dissertations usually require peer-reviewed sources — confirm or broaden." |
 | `depth=exhaustive` AND numeric `corpus_target` | "Exhaustive retrieval and a numeric target can conflict — clarify which governs." |
 
-## Step 5 — Recap and approval
+### Intent × output_intent unusual-combination warnings (A1, v0.5.0)
 
-Render exactly:
+Added v0.5.0 alongside the voice authorship policy fix. When the user explicitly picks an `intent` (via `grill-question` Step 0) that's unusual for the chosen `output_intent`, surface a soft warning so they can confirm or revise. Never blocks.
+
+| Condition | Warning |
+|---|---|
+| `output_intent=chapter` AND `intent=curious` | "Chapters usually defend a position. Confirm `curious` intent — system will author argument sentences with interpretation tags." |
+| `output_intent=memo` AND `intent=curious` | "Memos usually carry a recommendation. Want exploration mode instead?" |
+| `output_intent=exploration` AND `intent=defending` | "Exploration is for thinking out loud, not staking a position. Want chapter or brief instead?" |
+| `output_intent=exploration` AND `intent=building` | "Exploration is for thinking out loud, not building an argument. Want memo or brief instead?" |
+| `output_intent=podcast` AND `intent=defending` | "Defended-position podcasts exist (op-ed style) but are rare — confirm intent." |
+| `output_intent=deck` AND `intent=curious` | "Decks usually carry a recommendation or instruction. Want exploration mode instead?" |
+| `output_intent=deck` AND `intent=defending` | "Defended-position decks exist (board-deck style) but are rare — confirm intent." |
+
+The warning triggers when `intent` is **explicitly user-set** (came from `grill-question` Step 0 with cold-start path), NOT when `intent` was derived from the default-intent table in `synthesize/SKILL.md` (which means the user didn't see the question). Distinguish the two via the `intent_source: "user" | "derived"` field in handoff state.
+
+## Step 5 — Recap and approval (adapted to output_intent — R10, v0.4.0)
+
+Pick one of two recap shapes based on `output_intent`:
+
+### Full recap — for `chapter` / `brief` / `teaching` / `deck`
+
+These intents need every dimension visible because the final artifact will be defended (chapter, brief) or distributed (teaching, deck) and dimensions like methodology and publication_types matter.
 
 ```
 📋 Scoping recap — please review
@@ -119,6 +156,29 @@ Tier 3 (advanced):
 Approve and proceed to search? (approve / revise <dimension> / start over)
 ```
 
+### Condensed recap — for `memo` / `podcast` / `exploration`
+
+These intents are time-sensitive and the user doesn't need (or want) a dissertation-style table for a Slack-ready memo or a 5-minute exploration.
+
+```
+📋 Plan check
+
+Question:         <value>
+Aiming for:       <output_intent rendered plain — "1-page strategy memo" / "podcast bundle" / "exploration note">
+Audience:         <value>
+How deep:         <scan | representative>
+Disconfirmer:     <value, only if defending intent>
+
+⚠ Soft warnings:
+<one per line, or "None.">
+
+Look right? (approve / adjust)
+```
+
+The condensed recap drops year_range, methodology, publication_types, and corpus_target — they're auto-resolved from the calibration table in Step 0 and the user doesn't need to confirm dissertation-style fields for a memo.
+
+Both forms support the same response handling below.
+
 Handle responses:
 - **approve** → Step 6.
 - **revise <dim>** → re-ask that dimension only, re-render.
@@ -135,9 +195,11 @@ If 3 revision cycles pass without approval, proactively offer "Want to start ove
 
 ## Performance targets
 
-- Vague prompt → approval in ≤ 12 user messages (2–3 minutes).
-- Semi-specified → ≤ 6 messages (45–90 seconds).
-- Precise → ≤ 2 messages (< 30 seconds).
+- Vague prompt → approval in ≤ 12 user messages.
+- Semi-specified → ≤ 6 messages.
+- Precise → ≤ 2 messages.
+
+(R15, v0.4.0: dropped wall-clock estimates; message-count budgets are a more honest performance contract.)
 
 ## What you must never do
 
@@ -145,3 +207,35 @@ If 3 revision cycles pass without approval, proactively offer "Want to start ove
 - Never silently fill a resolved dimension the user did not confirm.
 - Never treat soft warnings as blockers — surface them, let the user decide.
 - Never skip the audit append on approval.
+
+## User narration (added v0.2.1)
+
+Follow `NARRATION.md`. Scope is mostly inference + brief gap-filling; the visible surface is the recap.
+
+**When showing the scoping recap:**
+
+Render the recap in plain language — not as a JSON dump or a config table. The recap is the user's last chance to course-correct before the pipeline runs.
+
+> Here's the plan I'm going to run with:
+> - Question: [in the user's words]
+> - Aiming for: [chapter / brief / podcast / etc.]
+> - Audience: [who]
+> - How deep: [scan / standard / exhaustive — translated]
+> - Year window: [years or "no restriction"]
+> - What would change your mind: [the disconfirmer]
+>
+> Look right? Say "go" or tell me what to adjust.
+
+Never surface `scope_version`, `tier3`, `soft_warnings`, or other field-name jargon.
+
+## Interactive choices (added v0.2.2)
+
+Every multi-choice question in this skill fires a form widget per `NARRATION.md` §Interactive choice contract.
+
+**Recap approval**: pills for `approve` / `revise <dimension>` / `start over` plus `data-other` for arbitrary edits.
+
+**Per-dimension revision questions** (purpose, fields, methodology, depth, etc.): pills with the inferred default highlighted, plus `data-other`.
+
+**Year range**: pills for common windows (last 5y / last 10y / 1985+ / no restriction) plus `data-other` for custom dates.
+
+Always include `data-other`.
