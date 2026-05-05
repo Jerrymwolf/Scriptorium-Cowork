@@ -102,9 +102,9 @@ check "TODO.md exists" \
 check "PROCESS.md exists" \
   PROCESS.md \
   "Plan-mode is the default"
-check "README has v0.2.0 callout" \
+check "README has at least one version callout" \
   README.md \
-  "New in v0\.2\.0"
+  "[Ww]hat's new in v0\.[0-9]+\.[0-9]+|[Nn]ew in v0\.[0-9]+\.[0-9]+"
 
 echo
 echo "=== Narration contract (v0.2.1) ==="
@@ -300,7 +300,7 @@ check "render has Render mode by intent" \
 # R20 (v0.4.1) — render must translate [paper_id:locator] to APA inline format
 check "render mandates citation translation" \
   skills/render/SKILL.md \
-  "Citation translation . MANDATORY"
+  "Citation translation — MANDATORY"
 check "render warns about audit-grammar leaking into render" \
   skills/render/SKILL.md \
   "audit-trail grammar leaking"
