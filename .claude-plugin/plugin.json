@@ -1,6 +1,6 @@
 {
   "name": "scriptorium-cowork",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Research-direction and lit-review plugin for Cowork. Grills a half-formed idea into a defensible research question, runs a PRISMA-audited review, ships a synthesis chapter you'd defend. For doctoral researchers and grad students.",
   "author": {
     "name": "Jeremiah Wolf",

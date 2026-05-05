@@ -2,6 +2,24 @@
 
 All notable changes to scriptorium-cowork are documented here.
 
+## 0.5.1 — 2026-05-04
+
+The README-readability patch. v0.5.0 shipped a README that read like internal release notes — four blockquotes of changelog jargon at the top, raw `[paper_id:locator]` syntax shown to users, internal terms like "PRISMA", "claim search", "evidence row" without translation, and skill names (`grill-me`, `grill-question`) in user-facing trigger phrases. v0.5.1 is purely a documentation fix.
+
+### Changed
+- **README.md rewritten for a researcher who's never used the plugin.** 247 → 183 lines. Jargon stripped:
+  - Four blockquotes of release notes condensed to a single one-line plain-English note linking to CHANGELOG
+  - `[paper_id:locator]` syntax replaced with example APA citations users will actually see
+  - "PRISMA audit trail" → "paper trail your committee can audit"
+  - "evidence-first claims" → "every empirical claim cites a real source"
+  - "contradiction surfacing" → "disagreement is named, not averaged"
+  - Skill names removed from trigger-phrase table; replaced with what the user actually says
+  - The raw evidence-row JSON dump removed; replaced with three plain-English paragraphs about the draft, paper trail, and contradictions section
+- **`scripts/smoke-test.sh` README check is now version-agnostic** (was hardcoded to `"New in v0.2.0"`; now matches any `v0.x.y` callout). Prevents this whole class of drift on future README rewrites.
+
+### Migrating from v0.5.0
+- No behavior changes. Pure docs + test-harness improvement. Re-install the v0.5.1 `.plugin` if you want the friendlier README in your installed copy; otherwise keep using v0.5.0 without functional difference.
+
 ## 0.5.0 — 2026-05-04
 
 The voice-reconciliation release. Closes the v0.4.x incoherence where the disconfirmer gate (intent-keyed) and the synthesize voice authorship policy (output_intent-keyed) could disagree — e.g., `intent: defending + output_intent: memo` would fire the gate but write in building voice. v0.5.0 puts both halves of the defending-position discipline under the same control.
