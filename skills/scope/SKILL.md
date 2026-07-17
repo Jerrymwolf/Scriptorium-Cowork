@@ -17,13 +17,13 @@ The goal of this skill is a single artifact: a **user-approved scope object** th
 
 ## Step 0 — Grill-me handoff state check (extended v0.4.0 — R2)
 
-If `review` fired one of the grill-me skills before invoking this one, handoff state is in conversation context:
+If `review` fired one of the direction skills (`research-direction` or `grill-question`) before invoking this one, handoff state is in conversation context:
 
-- From `grill-me`: `{purpose, audience, artifact, depth, tradition?, topic, output_intent}`
+- From `research-direction`: `{purpose, audience, artifact, depth, tradition?, topic, output_intent}`
 - From `grill-question`: `{research_question, sub_questions, tradition, boundaries, intent, disconfirmer, output_intent}`
 - From `review` direct: `{output_intent, depth}` (if user came in with a clear question)
 
-Treat any present field as **resolved** in the inference pass (Step 2). Skip Tier 1+2 questions that already have answers. Go directly to Step 5 (recap and approval) with a one-line acknowledgment: *"You've already worked through purpose and question with the grill-me skill — let me confirm the scope and we'll search."*
+Treat any present field as **resolved** in the inference pass (Step 2). Skip Tier 1+2 questions that already have answers. Go directly to Step 5 (recap and approval) with a one-line acknowledgment: *"You've already worked through purpose and question with the research-direction skill — let me confirm the scope and we'll search."*
 
 ### Output_intent calibration table (R2, v0.4.0)
 

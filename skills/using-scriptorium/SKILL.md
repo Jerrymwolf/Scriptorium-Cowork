@@ -1,6 +1,6 @@
 ---
 name: using-scriptorium
-description: Use when the user mentions a literature review, asks to find/screen/synthesize/draft research, or starts a Scriptorium session. Probes which Cowork connectors are available, picks the state home, teaches the three disciplines, and dispatches to the phase-appropriate skill (scope / search / screen / extract / synthesize / contradictions / audit / publish, or the grill-me skills upstream).
+description: Use when the user mentions a literature review, asks to find/screen/synthesize/draft research, or starts a Scriptorium session. Probes which Cowork connectors are available, picks the state home, teaches the three disciplines, and dispatches to the phase-appropriate skill (scope / search / screen / extract / synthesize / contradictions / audit / publish, or the direction skills upstream — research-direction / grill-question).
 ---
 
 # Using Scriptorium (Cowork)
@@ -125,7 +125,7 @@ Both runtimes agree on these. Skills never invent variants.
 | Phase | User says… | Skill to fire |
 |---|---|---|
 | Setup | "set up Scriptorium", first run, "what is this" | `setup` |
-| Direction (fuzzy goal) | "I want to learn about X", "I have a topic but I'm not sure what I want from it", "grill me on this topic" | `grill-me` |
+| Direction (fuzzy goal) | "I want to learn about X", "I have a topic but I'm not sure what I want from it", "what should I do with this topic?" | `research-direction` |
 | Direction (need a question) | "I need to write a paper on X but don't have my question yet", "help me find the research question", "grill me on the question" | `grill-question` |
 | Scope | "I want to do a lit review on X", "scope this review", "what should I search for" | `scope` |
 | Search | "find papers on X", "search for…" | `search` |

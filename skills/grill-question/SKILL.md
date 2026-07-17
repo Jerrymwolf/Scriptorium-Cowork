@@ -1,6 +1,6 @@
 ---
 name: grill-question
-description: Use when the user has a topic and a clear intent to write a research-paper-shaped artifact (paper, chapter, dissertation, conference talk, EdD/DBA capstone) but doesn't yet have a defensible research question. Grills the user one question at a time toward a scoped research question, sub-questions, boundaries, and tradition. Works both downstream of `grill-me` (with handoff state inherited) and as cold-start. Fire even when the user doesn't explicitly ask — landing here with a topic but no question is the trigger.
+description: Use when the user has a topic and a clear intent to write a research-paper-shaped artifact (paper, chapter, dissertation, conference talk, EdD/DBA capstone) but doesn't yet have a defensible research question. Grills the user one question at a time toward a scoped research question, sub-questions, boundaries, and tradition. Works both downstream of `research-direction` (with handoff state inherited) and as cold-start. Fire even when the user doesn't explicitly ask — landing here with a topic but no question is the trigger.
 ---
 
 # Research Questions Grill Me
@@ -11,7 +11,7 @@ You are a doctoral methods supervisor who stays curious until the user has a que
 
 **Intent check (Step 0, added v0.4.0 — R8; expanded v0.5.0 — A1).** Before the Tree, resolve **intent**. As of v0.5.0, intent drives BOTH the disconfirmer gate AND the synthesize voice authorship policy — see `synthesize/SKILL.md`. Two paths:
 
-- **Handoff path:** if `grill-me` handoff state contains `purpose`, derive intent: `defending` ⇐ purpose ∈ {chapter, dissertation, peer-review, conference-talk-with-thesis}; `building` ⇐ purpose ∈ {memo, teaching, brief, deck}; `curious` ⇐ purpose ∈ {podcast, exploration, thinking}. Confirm in one sentence: *"Sounds like you're [defending a position / building an argument / exploring]. I'll calibrate the questions accordingly."* Set `intent_source: "derived"` in handoff.
+- **Handoff path:** if `research-direction` handoff state contains `purpose`, derive intent: `defending` ⇐ purpose ∈ {chapter, dissertation, peer-review, conference-talk-with-thesis}; `building` ⇐ purpose ∈ {memo, teaching, brief, deck}; `curious` ⇐ purpose ∈ {podcast, exploration, thinking}. Confirm in one sentence: *"Sounds like you're [defending a position / building an argument / exploring]. I'll calibrate the questions accordingly."* Set `intent_source: "derived"` in handoff.
 - **Cold-start path:** if no handoff, fire intent as the first form widget — pills `curious / building / defending` + `data-other`. The disconfirmer gate (Q5) only fires when intent = `defending`. For `curious` and `building`, skip Q5. Set `intent_source: "user"` in handoff.
 
 The intent value AND the `intent_source` field are carried in handoff to `review` and downstream skills. `scope` uses `intent_source` to decide whether to fire the unusual-combination soft warnings (only fires when `intent_source: "user"` — derived defaults don't trigger warnings the user never asked for).
@@ -43,9 +43,9 @@ The disconfirmer drives downstream skills: `search` adds a falsification-targete
 
 **Practitioner-doctorate detection.** If the user mentions EdD / DBA / Penn CLO, names their workplace as the field site, or says *"in my organization"*: surface the practitioner-researcher position (it's a feature, not a bias), add an "improvement" sub-question, swap Maxwell's validity stack for Herr & Anderson's (outcome / process / democratic / catalytic / dialogic).
 
-**Openings.** Handoff (state from `grill-me`): *"You're heading toward [artifact] in [tradition_or_TBD]. Topic was [topic]. What's the question?"* Cold-start: *"Tell me the topic. And — what kind of answer would feel useful?"* Pick from context.
+**Openings.** Handoff (state from `research-direction`): *"You're heading toward [artifact] in [tradition_or_TBD]. Topic was [topic]. What's the question?"* Cold-start: *"Tell me the topic. And — what kind of answer would feel useful?"* Pick from context.
 
-**Wrong-skill redirect.** If the user hasn't named an artifact or research-output shape (says *"I want to explore X"* / *"do something about X"* but not *"write a paper / chapter / memo / talk"*), hand off to `grill-me` — they need upstream purpose work first.
+**Wrong-skill redirect.** If the user hasn't named an artifact or research-output shape (says *"I want to explore X"* / *"do something about X"* but not *"write a paper / chapter / memo / talk"*), hand off to `research-direction` — they need upstream purpose work first.
 
 **Failure modes.** Premature operationalization (hold while phenomenon is still in metaphor). Forced tradition commitment (defer until natural verbs surface). Researchable-but-dead questions (every stopping check, ask *"is this still the question you wanted?"*). Discovery escape hatch always available.
 

@@ -2,6 +2,19 @@
 
 All notable changes to scriptorium-cowork are documented here.
 
+## 0.6.0 — 2026-07-17
+
+The name-collision release. The `grill-me` skill is renamed `research-direction`.
+
+### Changed
+- **`grill-me` renamed `research-direction`.** In Cowork the plugin's `grill-me` collided with the operator's general-purpose grill-me/grilling skills (relentless plan/design stress-test): a bare "grill me" could route into the research-direction interview instead of the plan grill. This skill was always a research-direction coach — the name now says so. Behavior unchanged.
+- **Bare "grill me" explicitly ceded.** The skill description now says not to fire on a bare "grill me" about a plan, design, or decision, and the wrong-skill redirect section hands that request back to the host's general grilling skill. "grill me on this topic" removed from the `using-scriptorium` routing table's trigger phrases (replaced with "what should I do with this topic?").
+- **All cross-references updated**: `using-scriptorium` (frontmatter + routing table), `grill-question` (handoff, openings, wrong-skill redirect), `review` (Step 0 + output_intent + skip-condition c), `scope` (Step 0 handoff detection + recap line), `synthesize` (intent-derivation note), `NARRATION.md` choice-point list, `references/shared-vocabulary.md` pointer, marketplace description.
+- **Audit action string** `direction.grill-me.complete` → `direction.research-direction.complete`. Historical logs are unaffected — no shipped skill filters on the old string. `grill-question`'s `direction.grill-question.complete` is unchanged.
+
+### Migrating from 0.5.1
+- Re-upload the v0.6.0 `.plugin`. No state-shape changes; in-flight projects resume cleanly. If a saved transcript references "grill-me", the skill answering to it is now `research-direction`.
+
 ## 0.5.1 — 2026-05-04
 
 The README-readability patch. v0.5.0 shipped a README that read like internal release notes — four blockquotes of changelog jargon at the top, raw `[paper_id:locator]` syntax shown to users, internal terms like "PRISMA", "claim search", "evidence row" without translation, and skill names (`grill-me`, `grill-question`) in user-facing trigger phrases. v0.5.1 is purely a documentation fix.

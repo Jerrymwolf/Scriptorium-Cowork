@@ -129,7 +129,7 @@ Pattern (per the elicitation module in `mcp__visualize__read_me`):
 - Mid-narration confirmations that don't need a structured answer ("got it, moving on" — just keep going)
 - Anything where the answer is genuinely free-text and pre-selected options would be misleading
 
-**Skills that have at least one choice point:** `grill-me`, `grill-question`, `review`, `scope`, `publish`, `render`, `setup`. Each must mandate form widgets in its prose for those points.
+**Skills that have at least one choice point:** `research-direction`, `grill-question`, `review`, `scope`, `publish`, `render`, `setup`. Each must mandate form widgets in its prose for those points.
 
 ## Failure-state narration (added v0.4.0 — R11)
 

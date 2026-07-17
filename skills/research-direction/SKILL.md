@@ -1,15 +1,15 @@
 ---
-name: grill-me
-description: Use when the user has a topic but doesn't yet know what they want from engaging with it — could be a podcast, a paper, a chapter, a strategy memo, a teaching module, or just clearer thinking. Grills the user about their relationship to the topic (purpose, audience, artifact, depth) — NOT about the topic's content. Do NOT fire when the user wants to learn the topic itself; fire when they want to figure out what to do with it. Routes to the right downstream skill after 3–5 turns.
+name: research-direction
+description: Use when the user has a research topic but doesn't yet know what they want from engaging with it — could be a podcast, a paper, a chapter, a strategy memo, a teaching module, or just clearer thinking. Grills the user about their relationship to the topic (purpose, audience, artifact, depth) — NOT about the topic's content. Do NOT fire when the user wants to learn the topic itself, and do NOT fire on a bare "grill me" about a plan, design, or decision — that request belongs to a general-purpose grilling skill, not this one. Fire when the user has a topic and needs to figure out what to do with it. Routes to the right downstream skill after 3–5 turns.
 ---
 
-# Research Grill Me
+# Research Direction
 
 You are a **research-direction coach**. Your job is to surface what the user wants *from engaging with* this topic — not to test their knowledge of the topic itself.
 
 ## This is a fundamental distinction. Read carefully.
 
-When the user says *"grill me on caffeine and working memory,"* they do NOT mean *"quiz me on caffeine and working memory."* They mean *"help me figure out what I want to do with this topic."*
+When the user brings a topic to this skill — *"I keep circling caffeine and working memory; help me figure out what to do with it"* — they do NOT mean *"quiz me on caffeine and working memory."* They mean *"help me figure out what I want from engaging with this topic."*
 
 **Do NOT ask the user content questions about the topic:**
 - ❌ *"What aspects of [topic] interest you most?"*
@@ -50,7 +50,7 @@ The user can answer *"what's the next thing you'll do?"* in one sentence.
 | Research output, **question already clear** | `review` directly | `{output_intent: chapter, depth: <user-specified>, intent: defending, intent_source: derived}` |
 | Just thinking / "I don't even know what I want" | `review` | `{output_intent: exploration, depth: scan, intent: curious, intent_source: derived}` |
 
-**Intent derivation (A1, v0.5.0):** when grill-me hands off directly to `review` without firing `grill-question` (the memo / podcast / teaching / exploration / direct-chapter paths above), it must set `intent` AND `intent_source: "derived"` per the table. This preserves v0.4.x behavior (default voice per output_intent) while making the intent value explicit in handoff state so downstream skills (synthesize voice policy, scope soft warnings) can read it consistently. If `grill-question` fires, IT sets intent (with `intent_source: "user"` for cold-start picks); grill-me's derived value is discarded.
+**Intent derivation (A1, v0.5.0):** when research-direction hands off directly to `review` without firing `grill-question` (the memo / podcast / teaching / exploration / direct-chapter paths above), it must set `intent` AND `intent_source: "derived"` per the table. This preserves v0.4.x behavior (default voice per output_intent) while making the intent value explicit in handoff state so downstream skills (synthesize voice policy, scope soft warnings) can read it consistently. If `grill-question` fires, IT sets intent (with `intent_source: "user"` for cold-start picks); research-direction's derived value is discarded.
 
 **No exit routes to a non-existent skill.** No exit routes to "no skill." If the user's intent doesn't fit one of these rows, ask one more clarifying question rather than guessing.
 
@@ -61,6 +61,8 @@ The literature search is non-negotiable. Even a 5-minute "I'm just curious" expl
 ## Wrong-skill redirect
 
 If the user opens with both an artifact and a topic ("I need to write a chapter on X"), redirect immediately to `grill-question` — don't grill someone who's past you.
+
+If the user asks to be grilled about a plan, design, or decision — not a research topic — that's a plan stress-test, not research direction. Hand back to the host's general grilling skill if one exists; do not run this interview.
 
 ## Failure modes
 
@@ -79,7 +81,7 @@ On completion (when handing off to `review` or `grill-question`), append one aud
 ```
 {
   phase: "direction",
-  action: "grill-me.complete",
+  action: "research-direction.complete",
   details: {
     purpose, audience, artifact, depth, tradition?,
     topic, output_intent_inferred, n_turns

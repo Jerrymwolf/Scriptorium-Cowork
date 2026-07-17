@@ -26,7 +26,7 @@ A literature review's value is the synthesis and argument layered over factual c
 | `building` | building | system *suggests* argument sentences as drafts the user can accept, edit, or reject |
 | `curious` | curious | system may author argument sentences with an "interpretation" tag |
 
-`intent` is set by `grill-question` Step 0 (R8) when the user picks explicitly. When `grill-question` doesn't fire (e.g., `grill-me` exits straight to `review` for memo / podcast / exploration / teaching / deck paths), intent is derived by `grill-me` per the default-intent table:
+`intent` is set by `grill-question` Step 0 (R8) when the user picks explicitly. When `grill-question` doesn't fire (e.g., `research-direction` exits straight to `review` for memo / podcast / exploration / teaching / deck paths), intent is derived by `research-direction` per the default-intent table:
 
 | `output_intent` | Default `intent` |
 |---|---|

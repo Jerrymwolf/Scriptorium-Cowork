@@ -11,7 +11,7 @@ This skill runs the end-to-end review pipeline. It is the single entry point for
 
 ## Output-intent dispatch (added v0.3.0)
 
-`review` accepts an `output_intent` parameter (set by `grill-me` or by direct invocation) that calibrates every downstream phase. The pipeline is the same; the calibration changes.
+`review` accepts an `output_intent` parameter (set by `research-direction` or by direct invocation) that calibrates every downstream phase. The pipeline is the same; the calibration changes.
 
 | `output_intent` | Corpus target | Synthesis length | Voice | Final artifact |
 |---|---|---|---|---|
@@ -106,11 +106,11 @@ Phase labels are user-language (no "extract", "screen" jargon) per `NARRATION.md
 
    - *"Clear question, just need the literature"* → continue to Step 1 (`scope`).
    - *"Clear topic but need the question"* → fire `grill-question`. When it returns with `{research_question, sub_questions, tradition, boundaries}`, continue to Step 1 with that state pre-populated.
-   - *"I'm not even sure what I want yet"* / *"grill me first"* → fire `grill-me`. It may route to `grill-question` along the way; eventually returns with handoff state. Then continue to Step 1.
+   - *"I'm not even sure what I want yet"* / *"help me figure out the direction"* → fire `research-direction`. It may route to `grill-question` along the way; eventually returns with handoff state. Then continue to Step 1.
 
-   Skip Step 0 entirely when (a) the user's initial prompt already contains a research question (a sentence ending with `?` that passes a basic So-What check), OR (b) the user explicitly says they have it scoped, OR **(c) `grill-me` or `grill-question` just handed off — their handoff state contains the direction signal Step 0 was about to ask for** (R4, v0.4.0: closes the v0.3.0 redundancy bug where review re-asked direction even after grill flows resolved it).
+   Skip Step 0 entirely when (a) the user's initial prompt already contains a research question (a sentence ending with `?` that passes a basic So-What check), OR (b) the user explicitly says they have it scoped, OR **(c) `research-direction` or `grill-question` just handed off — their handoff state contains the direction signal Step 0 was about to ask for** (R4, v0.4.0: closes the v0.3.0 redundancy bug where review re-asked direction even after grill flows resolved it).
 
-1. **Scope** — fire `scope`. Produces a user-approved scope artifact. Every downstream phase reads it. If grill-me handoff state is present, scoping uses it as pre-resolved fields and only asks about gaps.
+1. **Scope** — fire `scope`. Produces a user-approved scope artifact. Every downstream phase reads it. If research-direction handoff state is present, scoping uses it as pre-resolved fields and only asks about gaps.
 2. **Search** — fire `search`. Runs queries across the connected scholarly-search MCPs. Writes to `corpus`. Appends an audit entry.
 3. **Screen** — fire `screen`. Applies inclusion/exclusion criteria. Updates `corpus` row statuses. Appends an audit entry.
 4. **Extract** — fire `extract`. For each kept paper, resolves full text via the cascade and writes evidence rows. Appends an audit entry per paper.
