@@ -117,7 +117,7 @@ check "NARRATION.md has vocabulary translation table" \
 check "NARRATION.md has cost budget" \
   NARRATION.md \
   "Cost budget"
-for skill in audit contradictions extract grill-me grill-question publish render review scope screen search setup synthesize using-scriptorium; do
+for skill in audit contradictions extract research-direction grill-question publish render review scope screen search setup synthesize using-scriptorium; do
   check "$skill has User narration section" \
     "skills/$skill/SKILL.md" \
     "^## User narration"
@@ -131,7 +131,7 @@ check "NARRATION.md has Interactive choice contract" \
 check "NARRATION.md mandates data-other escape hatch" \
   NARRATION.md \
   "data-other"
-for skill in grill-me grill-question review scope publish render setup; do
+for skill in research-direction grill-question review scope publish render setup; do
   check "$skill has Interactive choices section" \
     "skills/$skill/SKILL.md" \
     "^## Interactive choices"
@@ -139,8 +139,8 @@ done
 
 echo
 echo "=== Always-research + mechanical cite-check (v0.3.0) ==="
-check "grill-me exits all route through review" \
-  skills/grill-me/SKILL.md \
+check "research-direction exits all route through review" \
+  skills/research-direction/SKILL.md \
   "every Scriptorium exit produces a literature-backed artifact"
 check "review accepts output_intent dispatch" \
   skills/review/SKILL.md \
@@ -196,7 +196,7 @@ fi
 # R4 — review Step 0 skip on grill handoff
 check "review Step 0 skips on grill handoff" \
   skills/review/SKILL.md \
-  "grill-me. or .grill-question. just handed off"
+  "research-direction. or .grill-question. just handed off"
 
 # R5 — progress artifact
 check "review references scriptorium-progress artifact" \
@@ -207,11 +207,17 @@ check "review references mcp__cowork__update_artifact" \
   "mcp__cowork__update_artifact"
 
 # R7 — vocab consolidated
-if [ "$(wc -c < skills/grill-me/references/shared-vocabulary.md)" -lt 500 ]; then
+VOCAB=skills/research-direction/references/shared-vocabulary.md
+if [ ! -f "$VOCAB" ]; then
+  echo "  ✗ R7 — vocab file missing"
+  echo "      file: $VOCAB"
+  FAIL=$((FAIL+1))
+elif [ "$(wc -c < "$VOCAB")" -lt 500 ]; then
   echo "  ✓ R7 — vocab consolidated"
   PASS=$((PASS+1))
 else
-  echo "  ✗ R7 — grill-me vocab still full size (drift risk)"
+  echo "  ✗ R7 — research-direction vocab still full size (drift risk)"
+  echo "      file: $VOCAB"
   FAIL=$((FAIL+1))
 fi
 
@@ -280,9 +286,9 @@ check "search has Step 2.5 query review" \
   "preview_queries"
 
 # R17 — audit entries on grill phases
-check "grill-me has Audit append section" \
-  skills/grill-me/SKILL.md \
-  "grill-me\.complete"
+check "research-direction has Audit append section" \
+  skills/research-direction/SKILL.md \
+  "research-direction\.complete"
 check "grill-question has Audit append section" \
   skills/grill-question/SKILL.md \
   "grill-question\.complete"
@@ -355,18 +361,18 @@ check "grill-question explicitly notes intent drives voice as of v0.5.0" \
   skills/grill-question/SKILL.md \
   "intent drives BOTH the disconfirmer gate AND the synthesize voice"
 
-# A1.4 — grill-me derives intent on direct-to-review paths
-check "grill-me sets intent in podcast handoff" \
-  skills/grill-me/SKILL.md \
+# A1.4 — research-direction derives intent on direct-to-review paths
+check "research-direction sets intent in podcast handoff" \
+  skills/research-direction/SKILL.md \
   "intent: curious, intent_source: derived"
-check "grill-me sets intent in memo handoff" \
-  skills/grill-me/SKILL.md \
+check "research-direction sets intent in memo handoff" \
+  skills/research-direction/SKILL.md \
   "intent: building, intent_source: derived"
-check "grill-me sets intent in chapter handoff" \
-  skills/grill-me/SKILL.md \
+check "research-direction sets intent in chapter handoff" \
+  skills/research-direction/SKILL.md \
   "intent: defending, intent_source: derived"
-check "grill-me documents intent derivation table" \
-  skills/grill-me/SKILL.md \
+check "research-direction documents intent derivation table" \
+  skills/research-direction/SKILL.md \
   "Intent derivation .A1, v0.5.0"
 
 echo
